@@ -5,6 +5,7 @@
 ## Version: @project-version@
 ## IconTexture: Interface\Icons\INV_Misc_Note_01
 ## X-License: All Rights Reserved
+## X-Curse-Project-ID: 1754264
 ## SavedVariables: BarPlanDB
 ## SavedVariablesPerCharacter: BarPlanCharDB
 
