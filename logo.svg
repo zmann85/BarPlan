@@ -1,100 +1,121 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="42%" r="65%">
-      <stop offset="0" stop-color="#1d2e3f"/>
-      <stop offset="0.6" stop-color="#121b26"/>
-      <stop offset="1" stop-color="#0a0f15"/>
-    </radialGradient>
-    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#66bbff" stop-opacity="0.30"/>
-      <stop offset="1" stop-color="#66bbff" stop-opacity="0"/>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#3a3026"/>
+      <stop offset="0.6" stop-color="#1e1913"/>
+      <stop offset="1" stop-color="#0d0b08"/>
     </radialGradient>
     <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#f3d27a"/>
       <stop offset="1" stop-color="#9c7326"/>
     </linearGradient>
-    <linearGradient id="slot" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2a2f36"/>
-      <stop offset="1" stop-color="#15191e"/>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c9b48a"/>
+      <stop offset="0.5" stop-color="#6e5e44"/>
+      <stop offset="1" stop-color="#3a3024"/>
     </linearGradient>
-    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff7a5a"/>
-      <stop offset="1" stop-color="#8e1a10"/>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
-    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#8fd3ff"/>
-      <stop offset="1" stop-color="#1c5aa0"/>
-    </linearGradient>
-    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#9ef07a"/>
-      <stop offset="1" stop-color="#2f7a1c"/>
-    </linearGradient>
-    <linearGradient id="amber" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffd27a"/>
-      <stop offset="1" stop-color="#a0611c"/>
-    </linearGradient>
-    <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#d7a0ff"/>
-      <stop offset="1" stop-color="#5a2a9c"/>
-    </linearGradient>
-    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.35"/>
-      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
+    <linearGradient id="g_red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e8603c"/><stop offset="1" stop-color="#5e140c"/></linearGradient><linearGradient id="g_blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5aa8e8"/><stop offset="1" stop-color="#123a6e"/></linearGradient><linearGradient id="g_amber" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0b44a"/><stop offset="1" stop-color="#6e3a0c"/></linearGradient><linearGradient id="g_violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b77ae8"/><stop offset="1" stop-color="#3a1468"/></linearGradient><linearGradient id="g_grey" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6a6e74"/><stop offset="1" stop-color="#24272b"/></linearGradient>
   </defs>
-
-  <rect x="0" y="0" width="400" height="400" rx="56" fill="url(#bg)"/>
-  <rect x="14" y="14" width="372" height="372" rx="44" fill="none" stroke="url(#gold)" stroke-width="6"/>
-  <circle cx="200" cy="200" r="165" fill="url(#glow)"/>
-
-  <!-- a 3 x 3 action bar: filled buttons, and planned ones waiting (dashed) -->
-  <g transform="translate(200,200)">
-    <!-- row 1 -->
-    <g transform="translate(-104,-104)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#red)" stroke="#e8c46a" stroke-width="5"/>
-      <path d="M -8 8 L 24 -24 L 26 -26" fill="none" stroke="#fff4e0" stroke-width="9" stroke-linecap="round"/>
-      <path d="M -20 -2 L 2 20" stroke="#fff4e0" stroke-width="8" stroke-linecap="round"/>
-      <path d="M -10 10 L -24 24" stroke="#fff4e0" stroke-width="7" stroke-linecap="round"/>
-      <circle cx="-26" cy="26" r="5" fill="#fff4e0"/>
-      <rect x="-40" y="-40" width="80" height="80" rx="10" fill="url(#shine)"/>
-    </g>
-    <g transform="translate(0,-104)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#blue)" stroke="#e8c46a" stroke-width="5"/>
-      <path d="M 0 -26 L 22 -16 L 22 4 C 22 18 10 26 0 30 C -10 26 -22 18 -22 4 L -22 -16 Z" fill="none" stroke="#f0faff" stroke-width="7" stroke-linejoin="round"/>
-      <rect x="-40" y="-40" width="80" height="80" rx="10" fill="url(#shine)"/>
-    </g>
-    <g transform="translate(104,-104)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#amber)" stroke="#e8c46a" stroke-width="5"/>
-      <path d="M -6 -28 L -18 4 L 0 4 L -6 28 L 18 -6 L 0 -6 L 8 -28 Z" fill="#fff6dc"/>
-      <rect x="-40" y="-40" width="80" height="80" rx="10" fill="url(#shine)"/>
-    </g>
-    <!-- row 2 -->
-    <g transform="translate(-104,0)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#green)" stroke="#e8c46a" stroke-width="5"/>
-      <path d="M 0 -24 C 14 -6 22 4 22 12 C 22 24 12 30 0 30 C -12 30 -22 24 -22 12 C -22 4 -14 -6 0 -24 Z" fill="#effde6"/>
-      <rect x="-40" y="-40" width="80" height="80" rx="10" fill="url(#shine)"/>
-    </g>
-    <g transform="translate(0,0)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#violet)" stroke="#e8c46a" stroke-width="5"/>
-      <path d="M 0 -26 L 7 -7 L 27 -7 L 11 5 L 17 25 L 0 13 L -17 25 L -11 5 L -27 -7 L -7 -7 Z" fill="#f6ecff"/>
-      <rect x="-40" y="-40" width="80" height="80" rx="10" fill="url(#shine)"/>
-    </g>
-    <g transform="translate(104,0)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#slot)" stroke="#66bbff" stroke-width="4" stroke-dasharray="10 8"/>
-      <path d="M 0 -16 L 0 16 M -16 0 L 16 0" stroke="#66bbff" stroke-opacity="0.85" stroke-width="7" stroke-linecap="round"/>
-    </g>
-    <!-- row 3 -->
-    <g transform="translate(-104,104)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#slot)" stroke="#66bbff" stroke-width="4" stroke-dasharray="10 8"/>
-      <path d="M 0 -16 L 0 16 M -16 0 L 16 0" stroke="#66bbff" stroke-opacity="0.85" stroke-width="7" stroke-linecap="round"/>
-    </g>
-    <g transform="translate(0,104)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#slot)" stroke="#66bbff" stroke-width="4" stroke-dasharray="10 8"/>
-      <path d="M 0 -16 L 0 16 M -16 0 L 16 0" stroke="#66bbff" stroke-opacity="0.85" stroke-width="7" stroke-linecap="round"/>
-    </g>
-    <g transform="translate(104,104)">
-      <rect x="-42" y="-42" width="84" height="84" rx="12" fill="url(#slot)" stroke="#66bbff" stroke-width="4" stroke-dasharray="10 8"/>
-      <path d="M 0 -16 L 0 16 M -16 0 L 16 0" stroke="#66bbff" stroke-opacity="0.85" stroke-width="7" stroke-linecap="round"/>
-    </g>
+  <rect x="0" y="0" width="400" height="400" rx="28" fill="url(#bg)"/>
+  <rect x="12" y="12" width="376" height="376" rx="20" fill="none" stroke="url(#gold)" stroke-width="6"/>
+  <g transform="translate(0,28)">
+  <rect x="23.0" y="56.0" width="354" height="102" rx="6" fill="#0b0b0b" fill-opacity="0.75" stroke="url(#metal)" stroke-width="2"/>
+<g transform="translate(74.0,107)">
+<rect x="-42.0" y="-42.0" width="84" height="84" fill="#050505"/>
+<rect x="-40.0" y="-40.0" width="80" height="80" fill="none" stroke="url(#metal)" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_red)"/>
+<g opacity="1"><path d="M -10 10 L 22 -22" stroke="#fff4e0" stroke-width="8" stroke-linecap="round"/><path d="M -20 -2 L 2 20" stroke="#fff4e0" stroke-width="7" stroke-linecap="round"/><path d="M -12 12 L -22 22" stroke="#fff4e0" stroke-width="6" stroke-linecap="round"/></g>
+<path d="M -37.0 37.0 L -37.0 -37.0 L 37.0 -37.0" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M -37.0 37.0 L 37.0 37.0 L 37.0 -37.0" fill="none" stroke="#000000" stroke-opacity="0.55" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="37.0" fill="url(#gloss)"/>
+<text x="31.0" y="-18.0" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#e6e6e6" stroke="#000" stroke-width="3.5" paint-order="stroke">1</text>
+</g>
+<g transform="translate(158.0,107)">
+<rect x="-42.0" y="-42.0" width="84" height="84" fill="#050505"/>
+<rect x="-40.0" y="-40.0" width="80" height="80" fill="none" stroke="url(#metal)" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_blue)"/>
+<g opacity="1"><path d="M 0 -24 L 20 -15 L 20 2 C 20 15 9 22 0 26 C -9 22 -20 15 -20 2 L -20 -15 Z" fill="none" stroke="#f0faff" stroke-width="6" stroke-linejoin="round"/></g>
+<path d="M -37.0 37.0 L -37.0 -37.0 L 37.0 -37.0" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M -37.0 37.0 L 37.0 37.0 L 37.0 -37.0" fill="none" stroke="#000000" stroke-opacity="0.55" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="37.0" fill="url(#gloss)"/>
+<clipPath id="cdclip"><rect x="-37.0" y="-37.0" width="74" height="74"/></clipPath>
+<path clip-path="url(#cdclip)" d="M 0 0 L 0 -74 A 74 74 0 1 1 -50.7 53.9 Z" fill="#000" fill-opacity="0.68"/>
+<text x="31.0" y="-18.0" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#e6e6e6" stroke="#000" stroke-width="3.5" paint-order="stroke">2</text>
+</g>
+<g transform="translate(242.0,107)">
+<rect x="-42.0" y="-42.0" width="84" height="84" fill="#050505"/>
+<rect x="-40.0" y="-40.0" width="80" height="80" fill="none" stroke="url(#metal)" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_amber)"/>
+<g opacity="1"><path d="M -4 -26 L -16 4 L 0 4 L -6 26 L 16 -6 L 0 -6 L 8 -26 Z" fill="#fff6dc"/></g>
+<path d="M -37.0 37.0 L -37.0 -37.0 L 37.0 -37.0" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M -37.0 37.0 L 37.0 37.0 L 37.0 -37.0" fill="none" stroke="#000000" stroke-opacity="0.55" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="37.0" fill="url(#gloss)"/>
+<text x="31.0" y="-18.0" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#e6e6e6" stroke="#000" stroke-width="3.5" paint-order="stroke">3</text>
+</g>
+<g transform="translate(326.0,107)">
+<rect x="-42.0" y="-42.0" width="84" height="84" fill="#050505"/>
+<rect x="-40.0" y="-40.0" width="80" height="80" fill="none" stroke="url(#metal)" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_violet)"/>
+<g opacity="1"><path d="M 0 -26 C 14 -10 20 0 18 12 C 16 22 8 26 0 26 C -8 26 -16 22 -18 12 C -20 2 -12 -6 -6 -14 C -4 -4 2 0 4 -6 C 6 -12 2 -20 0 -26 Z" fill="#fff0d8"/></g>
+<path d="M -37.0 37.0 L -37.0 -37.0 L 37.0 -37.0" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M -37.0 37.0 L 37.0 37.0 L 37.0 -37.0" fill="none" stroke="#000000" stroke-opacity="0.55" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="37.0" fill="url(#gloss)"/>
+<text x="31.0" y="-18.0" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#e6e6e6" stroke="#000" stroke-width="3.5" paint-order="stroke">4</text>
+</g>
+  <!-- a dotted line from the bar to the plan -->
+  <path d="M 184 164 L 200 180 L 216 164" fill="none" stroke="#ffd66b" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="23.0" y="186.0" width="354" height="102" rx="6" fill="#0b0b0b" fill-opacity="0.75" stroke="url(#metal)" stroke-width="2"/>
+<g transform="translate(74.0,237)">
+<rect x="-42.0" y="-42.0" width="84" height="84" fill="#050505"/>
+<rect x="-40.0" y="-40.0" width="80" height="80" fill="none" stroke="url(#metal)" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_grey)"/>
+<g opacity="0.45"><path d="M 0 0 m -18 0 a 18 18 0 1 1 18 18 a 12 12 0 1 1 -12 -12 a 6 6 0 1 1 6 6" fill="none" stroke="#f2f2f2" stroke-width="6" stroke-linecap="round"/></g>
+<path d="M -37.0 37.0 L -37.0 -37.0 L 37.0 -37.0" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M -37.0 37.0 L 37.0 37.0 L 37.0 -37.0" fill="none" stroke="#000000" stroke-opacity="0.55" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="37.0" fill="url(#gloss)"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="#000" fill-opacity="0.35"/>
+<text x="0" y="29.0" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#ffd66b" stroke="#000" stroke-width="3.5" paint-order="stroke">36</text>
+<text x="31.0" y="-18.0" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#e6e6e6" stroke="#000" stroke-width="3.5" paint-order="stroke">Q</text>
+</g>
+<g transform="translate(158.0,237)">
+<rect x="-42.0" y="-42.0" width="84" height="84" fill="#050505"/>
+<rect x="-40.0" y="-40.0" width="80" height="80" fill="none" stroke="url(#metal)" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_grey)"/>
+<g opacity="0.45"><path d="M 0 -24 L 7 -7 L 25 -7 L 10 4 L 16 22 L 0 11 L -16 22 L -10 4 L -25 -7 L -7 -7 Z" fill="#f2f2f2"/></g>
+<path d="M -37.0 37.0 L -37.0 -37.0 L 37.0 -37.0" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M -37.0 37.0 L 37.0 37.0 L 37.0 -37.0" fill="none" stroke="#000000" stroke-opacity="0.55" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="37.0" fill="url(#gloss)"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="#000" fill-opacity="0.35"/>
+<text x="0" y="29.0" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#ffd66b" stroke="#000" stroke-width="3.5" paint-order="stroke">40</text>
+<text x="31.0" y="-18.0" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#e6e6e6" stroke="#000" stroke-width="3.5" paint-order="stroke">E</text>
+</g>
+<g transform="translate(242.0,237)">
+<rect x="-42.0" y="-42.0" width="84" height="84" fill="#050505"/>
+<rect x="-40.0" y="-40.0" width="80" height="80" fill="none" stroke="url(#metal)" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_grey)"/>
+<g opacity="0.45"><path d="M -18 20 L 14 -12" stroke="#f2f2f2" stroke-width="7" stroke-linecap="round"/><path d="M 4 -24 C 20 -24 26 -12 24 0 L 12 -6 Z" fill="#f2f2f2"/></g>
+<path d="M -37.0 37.0 L -37.0 -37.0 L 37.0 -37.0" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M -37.0 37.0 L 37.0 37.0 L 37.0 -37.0" fill="none" stroke="#000000" stroke-opacity="0.55" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="37.0" fill="url(#gloss)"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="#000" fill-opacity="0.35"/>
+<text x="0" y="29.0" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#ffd66b" stroke="#000" stroke-width="3.5" paint-order="stroke">48</text>
+<text x="31.0" y="-18.0" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#e6e6e6" stroke="#000" stroke-width="3.5" paint-order="stroke">R</text>
+</g>
+<g transform="translate(326.0,237)">
+<rect x="-42.0" y="-42.0" width="84" height="84" fill="#050505"/>
+<rect x="-40.0" y="-40.0" width="80" height="80" fill="none" stroke="url(#metal)" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_grey)"/>
+<g opacity="0.45"><path d="M 0 -24 C 13 -6 20 4 20 12 C 20 22 11 28 0 28 C -11 28 -20 22 -20 12 C -20 4 -13 -6 0 -24 Z" fill="#f2f2f2"/></g>
+<path d="M -37.0 37.0 L -37.0 -37.0 L 37.0 -37.0" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3"/>
+<path d="M -37.0 37.0 L 37.0 37.0 L 37.0 -37.0" fill="none" stroke="#000000" stroke-opacity="0.55" stroke-width="3"/>
+<rect x="-37.0" y="-37.0" width="74" height="37.0" fill="url(#gloss)"/>
+<rect x="-37.0" y="-37.0" width="74" height="74" fill="#000" fill-opacity="0.35"/>
+<text x="0" y="29.0" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#ffd66b" stroke="#000" stroke-width="3.5" paint-order="stroke">52</text>
+<text x="31.0" y="-18.0" text-anchor="end" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="17" fill="#e6e6e6" stroke="#000" stroke-width="3.5" paint-order="stroke">F</text>
+</g>
   </g>
 </svg>
