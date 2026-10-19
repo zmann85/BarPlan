@@ -47,7 +47,8 @@ added (matched by name), and closes added tabs the plan doesn't have. Where the 
 **Keybindings too.** A plan saved on a character with its own keybindings (the "character specific" box in the
 game's keybinding options) keeps every key and what it does, macros and addon buttons included. Applying it
 gives the new character those keys as its own set. A plan saved on a character using the account-wide keys
-gives the new character the account-wide keys.
+keeps those keys too: applying it makes the new character use the account-wide keys and sets them to the plan's,
+so a new account or a fresh WoW folder gets your keys as well.
 The window also has a **Character specific keybindings** switch that shows and changes it for the character
 you're on, like the box in the game's keybinding options: on gives it its own set (a copy of the keys it has
 now), off goes back to the account-wide keys.

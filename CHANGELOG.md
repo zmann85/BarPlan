@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.8.0 (2026-10-19)
+
+### New
+- A plan saved on a character using the account-wide keybindings now keeps those keys too. Applying it sets the
+  account-wide keys to the plan's, so a new account or a fresh WoW folder gets your keys as well (before, it only
+  switched the character to the account-wide keys, whatever they were). Save such a plan again to add its keys.
+
 ## v1.7.0 (2026-10-19)
 
 First release on CurseForge.

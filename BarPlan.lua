@@ -381,9 +381,10 @@ local function chatNames(list)
 end
 
 ---------------------------------------------------------------- keybindings
--- Only a character with its own keybindings (the "character specific" box) has some to keep: the plan holds
--- every key and what it does, and applying it gives the new character those as its own set. A plan saved on
--- a character using the account-wide keys gives the new character the account-wide keys. Keys are read by
+-- A plan holds every key and what it does. Saved on a character with its own keybindings (the "character
+-- specific" box), applying it gives the new character those as its own set. Saved on a character using the
+-- account-wide keys, applying it makes the new character use the account-wide keys and sets those to the plan's
+-- (so a new account, or a new WoW folder, gets your keys too). Keys are read by
 -- asking each key what it does (that covers macro, spell and button clicks too, which the game's command list
 -- doesn't): every key of a keyboard and mouse with every modifier, and every key the command list knows.
 
@@ -417,16 +418,15 @@ local function charBindings()
     return GetCurrentBindingSet and GetCurrentBindingSet() == CHAR_SET
 end
 
--- { set = CHAR_SET, keys = { [key] = action } } for a character with its own, { set = ACCOUNT_SET } otherwise
+-- { set = CHAR_SET or ACCOUNT_SET, keys = { [key] = action } }
 local function readBindings()
     if not GetBindingAction then return nil end
-    if not charBindings() then return { set = ACCOUNT_SET } end
     local keys = {}
     for _, k in ipairs(keyUniverse()) do
         local a = GetBindingAction(k)
         if a and a ~= "" then keys[k] = a end
     end
-    return { set = CHAR_SET, keys = keys }
+    return { set = charBindings() and CHAR_SET or ACCOUNT_SET, keys = keys }
 end
 
 -- this character's own keybindings on or off (the game's "character specific" box): on copies the keys you have
@@ -444,9 +444,39 @@ function BP.setCharBindings(on)
 end
 
 -- give this character the plan's keybindings: { set = n, changed = n }, or nil when the plan has none
+local function setKeys(want)
+    local changed = 0
+    local keys = keyUniverse()
+    local seen = {}
+    for _, k in ipairs(keys) do seen[k] = true end
+    for k in pairs(want) do if not seen[k] then keys[#keys + 1] = k end end
+    for _, k in ipairs(keys) do
+        local w = want[k]
+        local cur = GetBindingAction(k)
+        if cur == "" then cur = nil end
+        if w ~= cur then
+            if w then SetBinding(k, w) else SetBinding(k) end
+            changed = changed + 1
+        end
+    end
+    return changed
+end
+
 local function applyBindings(b)
     if type(b) ~= "table" or not (SetBinding and SaveBindings) then return nil end
     local r = { set = b.set, changed = 0 }
+    if b.set == ACCOUNT_SET then
+        if charBindings() then
+            if LoadBindings then LoadBindings(ACCOUNT_SET) end
+            SaveBindings(ACCOUNT_SET)
+            r.changed = r.changed + 1
+        end
+        if type(b.keys) == "table" and next(b.keys) then
+            local n = setKeys(b.keys)
+            if n > 0 then SaveBindings(ACCOUNT_SET); r.changed = r.changed + n; r.accountKeys = n end
+        end
+        return r
+    end
     if b.set == CHAR_SET and type(b.keys) == "table" then
         local keys = keyUniverse()
         local seen = {}
@@ -462,11 +492,6 @@ local function applyBindings(b)
             end
         end
         SaveBindings(CHAR_SET) -- (this character's own set from now on)
-    elseif b.set == ACCOUNT_SET and charBindings() then
-        -- back to the account-wide keys (loaded first, so the account set isn't overwritten with this one's)
-        if LoadBindings then LoadBindings(ACCOUNT_SET) end
-        SaveBindings(ACCOUNT_SET)
-        r.changed = 1
     end
     return r
 end
@@ -570,7 +595,7 @@ function BP.record(name)
     local aOn, aAll = addOnCount(addons)
     say(string.format("%s \"%s\": %d buttons, %d of %d addons on, chat tabs %s%s%s.%s", was and "replaced" or "saved", name, n, aOn, aAll,
         (chat and chatNames(chat) or "(not readable)") .. (binds and (binds.set == CHAR_SET
-            and (", " .. count(binds.keys) .. " keybindings of its own") or ", account-wide keybindings") or ""),
+            and (", " .. count(binds.keys) .. " keybindings of its own") or (", " .. count(binds.keys) .. " account-wide keybindings")) or ""),
         (pinned > 0 and (", " .. pinned .. " spells kept at a lower rank") or "")
             .. (spellMacros > 0 and (", " .. spellMacros .. " single-spell macros kept as their spell") or ""),
         skipped > 0 and (" (" .. skipped .. " buttons of a kind it can't place left out)") or "",
@@ -631,6 +656,7 @@ function BP.apply(name)
         if not okb then say("keybindings couldn't be set up: " .. tostring(kb))
         elseif not kb then say("this plan has no keybindings yet - save it again on its character to keep them.")
         elseif kb.set == CHAR_SET then say("keybindings set up as the plan's (this character's own; " .. kb.changed .. " keys changed).")
+        elseif kb.accountKeys then say("account-wide keybindings set up as the plan's (" .. kb.accountKeys .. " keys changed).")
         elseif kb.changed > 0 then say("this character uses the account-wide keybindings again, as the plan's character did.") end
     end
     local a = DB.opts.addons and applyAddOns(plan.addons)
@@ -1076,7 +1102,7 @@ local function build()
     win.optChatDesc:SetText("Apply sets this character's chat tabs up as the plan's: names, message types, channels, order.")
     win.optChat = switch(win, { "On", "Off" }, function(on) DB.opts.chat = on; win.applyArmed = nil; BP.refreshUI() end)
     win.optKeysHead, win.optKeysDesc = rowText(win, "Keybindings", true)
-    win.optKeysDesc:SetText("Apply gives this character the plan's keybindings: its own set when the plan's character had one, the account-wide keys otherwise.")
+    win.optKeysDesc:SetText("Apply gives this character the plan's keybindings: its own set when the plan's character had one, otherwise the account-wide keys, set to the plan's.")
     win.optKeys = switch(win, { "On", "Off" }, function(on) DB.opts.keys = on; win.applyArmed = nil; BP.refreshUI() end)
     win.charKeysHead, win.charKeysDesc = rowText(win, "Character specific keybindings", true)
     win.charKeys = switch(win, { "On", "Off" }, function(on) BP.setCharBindings(on) end)

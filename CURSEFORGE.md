@@ -10,7 +10,7 @@ Set up one character's bars the way you like them, save them as a plan, and ever
 - **Single-spell placeholder macros** (`#showtooltip X` / `/cast X`) are saved as the spell itself, so you can plan spells you can't learn yet without using up the new character's macro slots.
 - **Which addons are on**: applying the plan switches the new character's addons to match and offers a reload.
 - **Your chat tabs**: names, message types, channels, font size, colour and order.
-- **Your keybindings**: a character with its own keybindings passes them on; otherwise the new character uses your account-wide keys.
+- **Your keybindings**: a character with its own keybindings passes them on as its own set; otherwise the plan keeps your account-wide keys and sets them up on a new account too.
 
 Addons, chat tabs and keybindings each have an On/Off switch, all on by default.
 
