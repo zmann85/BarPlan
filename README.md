@@ -1,3 +1,5 @@
+<p align="center"><img src="logo.svg" width="128" alt="BarPlan logo"></p>
+
 <h1 align="center">BarPlan</h1>
 <p align="center"><b>Your action bars as a plan: set up every new character of a class the same way, spells you haven't learned yet included.</b><br>
 A WoW Forever addon.</p>
