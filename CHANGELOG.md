@@ -2,6 +2,8 @@
 
 ## v1.7.0 (2026-10-19)
 
+First release on CurseForge.
+
 ### New
 - A macro that only casts one spell (`#showtooltip X` / `/cast X`) is saved in a plan as that spell. Keep such
   placeholders on the character you save from (for spells it can't learn yet): new characters get the plain
