@@ -1,128 +1,53 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
 <defs>
+  <radialGradient id="bg" cx="50%" cy="42%" r="65%">
+    <stop offset="0" stop-color="#3a2a1c"/><stop offset="0.6" stop-color="#1c1510"/><stop offset="1" stop-color="#0e0b08"/>
+  </radialGradient>
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#f2b860" stop-opacity="0.30"/><stop offset="1" stop-color="#f2b860" stop-opacity="0"/>
+  </radialGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d27a"/><stop offset="1" stop-color="#9c7326"/></linearGradient>
+  <radialGradient id="paper" cx="45%" cy="40%" r="75%">
+    <stop offset="0" stop-color="#f4e3b8"/><stop offset="0.7" stop-color="#e2c68c"/><stop offset="1" stop-color="#b8935a"/>
+  </radialGradient>
+  <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" seed="4" result="t"/>
+    <feDisplacementMap in="SourceGraphic" in2="t" scale="6"/>
+  </filter>
   <filter id="grain" x="0" y="0" width="100%" height="100%">
-    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
-    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.1 0.75"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="9" result="n"/>
+    <feColorMatrix in="n" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.08  0 0 0 -0.9 0.5"/>
   </filter>
-  <filter id="wood" x="0" y="0" width="100%" height="100%">
-    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.18" numOctaves="3" seed="3" result="n"/>
-    <feColorMatrix in="n" type="matrix" values="0.42 0 0 0 0.06  0.28 0 0 0 0.035  0.15 0 0 0 0.015  0 0 0 0 1"/>
-  </filter>
-  <filter id="paint"><feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="2" seed="5" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="3"/></filter>
-  <radialGradient id="vign" cx="50%" cy="45%" r="70%"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.65"/></radialGradient>
-  <radialGradient id="shade" cx="50%" cy="45%" r="75%"><stop offset="0.4" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.7"/></radialGradient>
-  <linearGradient id="bronze" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9b46a"/><stop offset="0.45" stop-color="#8a6630"/><stop offset="1" stop-color="#3e2a12"/></linearGradient>
-  <linearGradient id="iron" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8c8478"/><stop offset="0.5" stop-color="#4a453e"/><stop offset="1" stop-color="#26231f"/></linearGradient>
-  <linearGradient id="stone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4238"/><stop offset="1" stop-color="#25201a"/></linearGradient>
-  <radialGradient id="rivet" cx="35%" cy="35%" r="70%"><stop offset="0" stop-color="#f0d89a"/><stop offset="0.6" stop-color="#8a6630"/><stop offset="1" stop-color="#3a2810"/></radialGradient>
-  <clipPath id="tile"><rect x="0" y="0" width="400" height="400" rx="26"/></clipPath>
-  <radialGradient id="g_red" cx="35%" cy="30%" r="85%"><stop offset="0" stop-color="#c4502c"/><stop offset="1" stop-color="#3e0c06"/></radialGradient><radialGradient id="g_blue" cx="35%" cy="30%" r="85%"><stop offset="0" stop-color="#4a7fae"/><stop offset="1" stop-color="#0e2440"/></radialGradient><radialGradient id="g_amber" cx="35%" cy="30%" r="85%"><stop offset="0" stop-color="#d8952e"/><stop offset="1" stop-color="#4a2006"/></radialGradient><radialGradient id="g_violet" cx="35%" cy="30%" r="85%"><stop offset="0" stop-color="#8a4fb8"/><stop offset="1" stop-color="#240a3e"/></radialGradient><radialGradient id="g_grey" cx="35%" cy="30%" r="85%"><stop offset="0" stop-color="#5c5a54"/><stop offset="1" stop-color="#1c1b18"/></radialGradient>
+  <linearGradient id="feather" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfc6b4"/></linearGradient>
 </defs>
-<g clip-path="url(#tile)">
-  <rect x="0" y="0" width="400" height="400" filter="url(#wood)"/>
-  <rect x="0" y="0" width="400" height="400" fill="url(#shade)"/>
+<rect x="0" y="0" width="400" height="400" rx="56" fill="url(#bg)"/>
+<rect x="14" y="14" width="372" height="372" rx="44" fill="none" stroke="url(#gold)" stroke-width="6"/>
+<circle cx="200" cy="205" r="160" fill="url(#glow)"/>
+
+<g transform="translate(196,206) rotate(-4)">
+  <!-- the sheet, with a shadow -->
+  <rect x="-128" y="-122" width="256" height="252" rx="6" fill="#000" fill-opacity="0.45" transform="translate(7,9)" filter="url(#rough)"/>
+  <g filter="url(#rough)">
+    <rect x="-128" y="-122" width="256" height="252" rx="6" fill="url(#paper)"/>
+    <rect x="-128" y="-122" width="256" height="252" rx="6" filter="url(#grain)"/>
+  </g>
+  <!-- a title line, like a heading written on the plan -->
+  <path d="M -96 -92 C -60 -98 -20 -86 20 -94 C 44 -98 70 -92 96 -96" fill="none" stroke="#4a3418" stroke-width="5" stroke-linecap="round"/>
+  <path d="M -96 -76 C -70 -80 -40 -72 -10 -78" fill="none" stroke="#4a3418" stroke-opacity="0.6" stroke-width="3.5" stroke-linecap="round"/>
+  <rect x="-118.0" y="-73.0" width="50" height="50" rx="5" fill="#d9c08a" stroke="#4a3418" stroke-width="3.5"/><path d="M -106.0 -47.0 L -97.0 -37.0 L -79.0 -59.0" fill="none" stroke="#7a2a12" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="-56.0" y="-73.0" width="50" height="50" rx="5" fill="#d9c08a" stroke="#4a3418" stroke-width="3.5"/><path d="M -44.0 -47.0 L -35.0 -37.0 L -17.0 -59.0" fill="none" stroke="#7a2a12" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.0" y="-73.0" width="50" height="50" rx="5" fill="#d9c08a" stroke="#4a3418" stroke-width="3.5"/><path d="M 18.0 -47.0 L 27.0 -37.0 L 45.0 -59.0" fill="none" stroke="#7a2a12" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="68.0" y="-73.0" width="50" height="50" rx="5" fill="#d9c08a" stroke="#4a3418" stroke-width="3.5"/><path d="M 80.0 -47.0 L 89.0 -37.0 L 107.0 -59.0" fill="none" stroke="#7a2a12" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="-118.0" y="-11.0" width="50" height="50" rx="5" fill="#d9c08a" stroke="#4a3418" stroke-width="3.5"/><path d="M -106.0 15.0 L -97.0 25.0 L -79.0 3.0" fill="none" stroke="#7a2a12" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="-56.0" y="-11.0" width="50" height="50" rx="5" fill="#d9c08a" stroke="#4a3418" stroke-width="3.5"/><path d="M -44.0 15.0 L -35.0 25.0 L -17.0 3.0" fill="none" stroke="#7a2a12" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="6.0" y="-11.0" width="50" height="50" rx="5" fill="none" stroke="#4a3418" stroke-opacity="0.75" stroke-width="3" stroke-dasharray="7 6"/><rect x="68.0" y="-11.0" width="50" height="50" rx="5" fill="none" stroke="#4a3418" stroke-opacity="0.75" stroke-width="3" stroke-dasharray="7 6"/><rect x="-118.0" y="51.0" width="50" height="50" rx="5" fill="none" stroke="#4a3418" stroke-opacity="0.75" stroke-width="3" stroke-dasharray="7 6"/><rect x="-56.0" y="51.0" width="50" height="50" rx="5" fill="none" stroke="#4a3418" stroke-opacity="0.75" stroke-width="3" stroke-dasharray="7 6"/><rect x="6.0" y="51.0" width="50" height="50" rx="5" fill="none" stroke="#4a3418" stroke-opacity="0.75" stroke-width="3" stroke-dasharray="7 6"/><rect x="68.0" y="51.0" width="50" height="50" rx="5" fill="none" stroke="#4a3418" stroke-opacity="0.75" stroke-width="3" stroke-dasharray="7 6"/>
 </g>
-<rect x="9" y="9" width="382" height="382" rx="20" fill="none" stroke="url(#iron)" stroke-width="10"/>
-<rect x="15" y="15" width="370" height="370" rx="15" fill="none" stroke="url(#bronze)" stroke-width="2.5"/>
-<circle cx="24" cy="24" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/><circle cx="376" cy="24" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/><circle cx="24" cy="376" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/><circle cx="376" cy="376" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<g transform="translate(0,28)">
-<rect x="21.0" y="54.0" width="358" height="106" rx="4" fill="url(#stone)" stroke="#0a0704" stroke-width="3"/>
-<rect x="21.0" y="54.0" width="358" height="106" rx="4" filter="url(#grain)" opacity="0.6"/>
-<rect x="24.0" y="57.0" width="352" height="100" rx="3" fill="none" stroke="url(#bronze)" stroke-width="2.5"/>
-<circle cx="30.0" cy="63.0" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<circle cx="370.0" cy="63.0" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<circle cx="30.0" cy="151.0" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<circle cx="370.0" cy="151.0" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<g transform="translate(74.0,107)">
-<rect x="-43.0" y="-43.0" width="86" height="86" fill="#0a0704"/>
-<rect x="-40.5" y="-40.5" width="81" height="81" fill="none" stroke="url(#bronze)" stroke-width="4"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_red)"/>
-<g opacity="1" filter="url(#paint)"><path d="M -10 10 L 22 -22" stroke="#fbe7c0" stroke-width="7" stroke-linecap="round"/><path d="M -20 -2 L 2 20" stroke="#d9b56a" stroke-width="7" stroke-linecap="round"/><path d="M -12 12 L -22 22" stroke="#8a5a2b" stroke-width="6" stroke-linecap="round"/></g>
-<rect x="-37.0" y="-37.0" width="74" height="74" filter="url(#grain)" opacity="0.5"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#vign)"/>
-<text x="31.0" y="-18.0" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="18" fill="#efe6d2" stroke="#000" stroke-width="4" paint-order="stroke">1</text>
+
+<!-- quill, writing in the next slot of the plan -->
+<g transform="translate(250,195) rotate(41)">
+  <ellipse cx="10" cy="-60" rx="16" ry="96" fill="#000" fill-opacity="0.35" transform="translate(8,6)"/>
+  <path d="M 0 -170 C 22 -140 24 -70 9 -14 L 0 6 L -9 -14 C -24 -70 -22 -140 0 -170 Z" fill="url(#feather)" stroke="#5e5240" stroke-width="3"/>
+  <path d="M 0 -162 L 0 8" stroke="#5e5240" stroke-width="3"/>
+  <g stroke="#a89a82" stroke-width="2" fill="none">
+    <path d="M 0 -140 L 12 -130"/><path d="M 0 -118 L 15 -106"/><path d="M 0 -96 L 15 -83"/><path d="M 0 -74 L 13 -62"/><path d="M 0 -52 L 10 -42"/>
+    <path d="M 0 -140 L -12 -130"/><path d="M 0 -118 L -15 -106"/><path d="M 0 -96 L -15 -83"/><path d="M 0 -74 L -13 -62"/><path d="M 0 -52 L -10 -42"/>
+  </g>
+  <path d="M -4 6 L 0 34 L 4 6 Z" fill="#2a1c10"/>
 </g>
-<g transform="translate(158.0,107)">
-<rect x="-43.0" y="-43.0" width="86" height="86" fill="#0a0704"/>
-<rect x="-40.5" y="-40.5" width="81" height="81" fill="none" stroke="url(#bronze)" stroke-width="4"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_blue)"/>
-<g opacity="1" filter="url(#paint)"><path d="M 0 -24 L 20 -15 L 20 2 C 20 15 9 22 0 26 C -9 22 -20 15 -20 2 L -20 -15 Z" fill="#9aa8b4" stroke="#e6d5a8" stroke-width="4" stroke-linejoin="round"/><path d="M 0 -18 L 0 20 M -14 -2 L 14 -2" stroke="#4a5866" stroke-width="4"/></g>
-<rect x="-37.0" y="-37.0" width="74" height="74" filter="url(#grain)" opacity="0.5"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#vign)"/>
-<clipPath id="cd1"><rect x="-37.0" y="-37.0" width="74" height="74"/></clipPath>
-<path clip-path="url(#cd1)" d="M 0 0 L 0 -74 A 74 74 0 1 1 -50.7 53.9 Z" fill="#000" fill-opacity="0.66"/>
-<text x="31.0" y="-18.0" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="18" fill="#efe6d2" stroke="#000" stroke-width="4" paint-order="stroke">2</text>
-</g>
-<g transform="translate(242.0,107)">
-<rect x="-43.0" y="-43.0" width="86" height="86" fill="#0a0704"/>
-<rect x="-40.5" y="-40.5" width="81" height="81" fill="none" stroke="url(#bronze)" stroke-width="4"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_amber)"/>
-<g opacity="1" filter="url(#paint)"><path d="M -4 -26 L -16 4 L 0 4 L -6 26 L 16 -6 L 0 -6 L 8 -26 Z" fill="#fff1c4"/></g>
-<rect x="-37.0" y="-37.0" width="74" height="74" filter="url(#grain)" opacity="0.5"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#vign)"/>
-<text x="31.0" y="-18.0" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="18" fill="#efe6d2" stroke="#000" stroke-width="4" paint-order="stroke">3</text>
-</g>
-<g transform="translate(326.0,107)">
-<rect x="-43.0" y="-43.0" width="86" height="86" fill="#0a0704"/>
-<rect x="-40.5" y="-40.5" width="81" height="81" fill="none" stroke="url(#bronze)" stroke-width="4"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_violet)"/>
-<g opacity="1" filter="url(#paint)"><path d="M 0 -26 C 14 -10 20 0 18 12 C 16 22 8 26 0 26 C -8 26 -16 22 -18 12 C -20 2 -12 -6 -6 -14 C -4 -4 2 0 4 -6 C 6 -12 2 -20 0 -26 Z" fill="#ffd27a"/><path d="M 0 2 C 6 8 8 14 6 18 C 4 22 -4 22 -6 18 C -8 14 -4 8 0 2 Z" fill="#fff4d8"/></g>
-<rect x="-37.0" y="-37.0" width="74" height="74" filter="url(#grain)" opacity="0.5"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#vign)"/>
-<text x="31.0" y="-18.0" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="18" fill="#efe6d2" stroke="#000" stroke-width="4" paint-order="stroke">4</text>
-</g>
-<path d="M 184 164 L 200 180 L 216 164" fill="none" stroke="#0a0704" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M 184 164 L 200 180 L 216 164" fill="none" stroke="url(#bronze)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="21.0" y="184.0" width="358" height="106" rx="4" fill="url(#stone)" stroke="#0a0704" stroke-width="3"/>
-<rect x="21.0" y="184.0" width="358" height="106" rx="4" filter="url(#grain)" opacity="0.6"/>
-<rect x="24.0" y="187.0" width="352" height="100" rx="3" fill="none" stroke="url(#bronze)" stroke-width="2.5"/>
-<circle cx="30.0" cy="193.0" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<circle cx="370.0" cy="193.0" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<circle cx="30.0" cy="281.0" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<circle cx="370.0" cy="281.0" r="4.5" fill="url(#rivet)" stroke="#1a120a" stroke-width="1.2"/>
-<g transform="translate(74.0,237)">
-<rect x="-43.0" y="-43.0" width="86" height="86" fill="#0a0704"/>
-<rect x="-40.5" y="-40.5" width="81" height="81" fill="none" stroke="url(#bronze)" stroke-width="4"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_grey)"/>
-<g opacity="0.5" filter="url(#paint)"><path d="M 0 0 m -18 0 a 18 18 0 1 1 18 18 a 12 12 0 1 1 -12 -12 a 6 6 0 1 1 6 6" fill="none" stroke="#e8e0d0" stroke-width="6" stroke-linecap="round"/></g>
-<rect x="-37.0" y="-37.0" width="74" height="74" filter="url(#grain)" opacity="0.5"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#vign)"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="#000" fill-opacity="0.3"/>
-<text x="0" y="29.0" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="19" fill="#ffd36a" stroke="#000" stroke-width="4" paint-order="stroke">36</text>
-<text x="31.0" y="-18.0" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="18" fill="#efe6d2" stroke="#000" stroke-width="4" paint-order="stroke">Q</text>
-</g>
-<g transform="translate(158.0,237)">
-<rect x="-43.0" y="-43.0" width="86" height="86" fill="#0a0704"/>
-<rect x="-40.5" y="-40.5" width="81" height="81" fill="none" stroke="url(#bronze)" stroke-width="4"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_grey)"/>
-<g opacity="0.5" filter="url(#paint)"><path d="M 0 -22 C 14 -22 20 -12 20 -2 C 20 6 16 10 12 12 L 12 20 L -12 20 L -12 12 C -16 10 -20 6 -20 -2 C -20 -12 -14 -22 0 -22 Z" fill="#e8e0d0"/><circle cx="-8" cy="0" r="5" fill="#2a2620"/><circle cx="8" cy="0" r="5" fill="#2a2620"/></g>
-<rect x="-37.0" y="-37.0" width="74" height="74" filter="url(#grain)" opacity="0.5"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#vign)"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="#000" fill-opacity="0.3"/>
-<text x="0" y="29.0" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="19" fill="#ffd36a" stroke="#000" stroke-width="4" paint-order="stroke">40</text>
-<text x="31.0" y="-18.0" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="18" fill="#efe6d2" stroke="#000" stroke-width="4" paint-order="stroke">E</text>
-</g>
-<g transform="translate(242.0,237)">
-<rect x="-43.0" y="-43.0" width="86" height="86" fill="#0a0704"/>
-<rect x="-40.5" y="-40.5" width="81" height="81" fill="none" stroke="url(#bronze)" stroke-width="4"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_grey)"/>
-<g opacity="0.5" filter="url(#paint)"><path d="M -18 20 L 14 -12" stroke="#8a5a2b" stroke-width="7" stroke-linecap="round"/><path d="M 4 -24 C 22 -24 28 -10 24 2 L 10 -8 Z" fill="#e8e0d0"/></g>
-<rect x="-37.0" y="-37.0" width="74" height="74" filter="url(#grain)" opacity="0.5"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#vign)"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="#000" fill-opacity="0.3"/>
-<text x="0" y="29.0" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="19" fill="#ffd36a" stroke="#000" stroke-width="4" paint-order="stroke">48</text>
-<text x="31.0" y="-18.0" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="18" fill="#efe6d2" stroke="#000" stroke-width="4" paint-order="stroke">R</text>
-</g>
-<g transform="translate(326.0,237)">
-<rect x="-43.0" y="-43.0" width="86" height="86" fill="#0a0704"/>
-<rect x="-40.5" y="-40.5" width="81" height="81" fill="none" stroke="url(#bronze)" stroke-width="4"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#g_grey)"/>
-<g opacity="0.5" filter="url(#paint)"><circle cx="0" cy="8" r="11" fill="#e8e0d0"/><circle cx="-14" cy="-6" r="5" fill="#e8e0d0"/><circle cx="-5" cy="-15" r="5" fill="#e8e0d0"/><circle cx="6" cy="-15" r="5" fill="#e8e0d0"/><circle cx="15" cy="-6" r="5" fill="#e8e0d0"/></g>
-<rect x="-37.0" y="-37.0" width="74" height="74" filter="url(#grain)" opacity="0.5"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="url(#vign)"/>
-<rect x="-37.0" y="-37.0" width="74" height="74" fill="#000" fill-opacity="0.3"/>
-<text x="0" y="29.0" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="19" fill="#ffd36a" stroke="#000" stroke-width="4" paint-order="stroke">52</text>
-<text x="31.0" y="-18.0" text-anchor="end" font-family="Georgia, 'Times New Roman', serif" font-weight="700" font-size="18" fill="#efe6d2" stroke="#000" stroke-width="4" paint-order="stroke">F</text>
-</g>
-</g>
+<!-- the start of a tick being written in that slot -->
+<path d="M 207 214 L 214 222" fill="none" stroke="#7a2a12" stroke-width="5.5" stroke-linecap="round"/>
 </svg>
