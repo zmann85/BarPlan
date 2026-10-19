@@ -1,0 +1,15 @@
+package-as: BarPlan
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
+ignore:
+  - README.md
+  - CURSEFORGE.html
+
+embedded-libraries:
+  - libstub
+  - callbackhandler
+  - libdatabroker-1-1
+  - libdbicon-1-0

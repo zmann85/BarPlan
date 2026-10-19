@@ -1,0 +1,47 @@
+<p style="text-align:center;"><strong><span style="font-size:18px;">Save your action bars, addons, chat tabs and keybindings as a plan, and set up every new character of that class from it.</span></strong></p>
+
+<p>Set up one character's bars the way you like them, save them as a plan, and every new character of that class gets the same bars, <strong>including the spells it hasn't learned yet</strong>. Each spell goes onto its button the moment you learn it, and a new rank replaces the old one on the same button. No more dragging spells out of the spellbook every few levels.</p>
+
+<hr>
+
+<h2>What a plan keeps</h2>
+<ul>
+<li><strong>Your action bars</strong>: spells, macros and items, button by button. Macros with logic in them (stance swaps, mouseover, /startattack) are made on the new character when it doesn't have them.</li>
+<li><strong>Single-spell placeholder macros</strong> (<code>#showtooltip X</code> / <code>/cast X</code>) are saved as the spell itself, so you can plan spells you can't learn yet without using up the new character's macro slots.</li>
+<li><strong>Which addons are on</strong>: applying the plan switches the new character's addons to match and offers a reload.</li>
+<li><strong>Your chat tabs</strong>: names, message types, channels, font size, colour and order.</li>
+<li><strong>Your keybindings</strong>: a character with its own keybindings passes them on; otherwise the new character uses your account-wide keys.</li>
+</ul>
+<p>Addons, chat tabs and keybindings each have an On/Off switch, all on by default.</p>
+
+<hr>
+
+<h2>How to use it</h2>
+<ol>
+<li><code>/barplan</code> (or the minimap button) opens the window.</li>
+<li>On a character whose bars are done, type a name and click <strong>Save</strong>. Plans belong to their class.</li>
+<li>A new character of that class is asked at its first login, with your class's plans to pick from. Or choose a plan in the window and click <strong>Apply</strong>.</li>
+<li>Play. Learned spells go onto their buttons (after the fight if you learn one in combat).</li>
+</ol>
+<p>A button you empty yourself after BarPlan filled it stays empty, and a button you put something else on stays yours.</p>
+
+<hr>
+
+<h2>Commands</h2>
+<table>
+<tbody>
+<tr><td><code>/barplan</code></td><td>the window</td></tr>
+<tr><td><code>/barplan save [name]</code> / <code>apply [name]</code></td><td>save or apply a plan of your class</td></tr>
+<tr><td><code>/barplan status</code></td><td>the plan this character follows, spells still to learn, addons that differ</td></tr>
+<tr><td><code>/barplan list</code> / <code>use &lt;name&gt;</code> / <code>delete &lt;name&gt;</code></td><td>your class's plans, the one new characters are offered, delete one</td></tr>
+<tr><td><code>/barplan off</code> / <code>on</code></td><td>stop / resume putting learned spells on the bars</td></tr>
+<tr><td><code>/barplan addons on|off</code>, <code>chat on|off</code>, <code>keys on|off</code></td><td>what Apply also sets up</td></tr>
+<tr><td><code>/barplan minimap</code></td><td>hide / show the minimap button</td></tr>
+</tbody>
+</table>
+
+<hr>
+
+<h2>Taking your plans along</h2>
+<p>Plans are account-wide and live in <code>WTF\Account\&lt;account&gt;\SavedVariables\BarPlan.lua</code>. Copy that file (with the game closed) to take them to another WoW folder or account. Handy on launch day.</p>
+<p>Questions and bug reports are welcome in the comments.</p>
