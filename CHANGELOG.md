@@ -1,5 +1,13 @@
 # Changelog
 
+## v1.9.0 (2026-10-19)
+
+### New
+- Edit Mode layout: a plan keeps the Blizzard Edit Mode layout its character uses. Applying it adds the layout
+  (replacing an older one of the same name), makes it the new character's and offers a reload to set it up.
+  Its own On/Off switch in the window, `/barplan editmode on|off`. Save a plan again to add its layout.
+- The reload question after Apply covers addons and the layout together.
+
 ## v1.8.0 (2026-10-19)
 
 ### New

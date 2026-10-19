@@ -1,4 +1,4 @@
-**Save your action bars, addons, chat tabs and keybindings as a plan, and set up every new character of that class from it.**
+**Save your action bars, addons, chat tabs, keybindings and Edit Mode layout as a plan, and set up every new character of that class from it.**
 
 Set up one character's bars the way you like them, save them as a plan, and every new character of that class gets the same bars, **including the spells it hasn't learned yet**. Each spell goes onto its button the moment you learn it, and a new rank replaces the old one on the same button. No more dragging spells out of the spellbook every few levels.
 
@@ -11,8 +11,9 @@ Set up one character's bars the way you like them, save them as a plan, and ever
 - **Which addons are on**: applying the plan switches the new character's addons to match and offers a reload.
 - **Your chat tabs**: names, message types, channels, font size, colour and order.
 - **Your keybindings**: a character with its own keybindings passes them on as its own set; otherwise the plan keeps your account-wide keys and sets them up on a new account too.
+- **Your Edit Mode layout**: the Blizzard Edit Mode layout the character uses, added and made active on the new character.
 
-Addons, chat tabs and keybindings each have an On/Off switch, all on by default.
+Addons, chat tabs, keybindings and the Edit Mode layout each have an On/Off switch, all on by default.
 
 ---
 
@@ -36,7 +37,7 @@ A button you empty yourself after BarPlan filled it stays empty, and a button yo
 | `/barplan status` | the plan this character follows, spells still to learn, addons that differ |
 | `/barplan list` / `use <name>` / `delete <name>` | your class's plans, the one new characters are offered, delete one |
 | `/barplan off` / `on` | stop / resume putting learned spells on the bars |
-| `/barplan addons on\|off`, `chat on\|off`, `keys on\|off` | what Apply also sets up |
+| `/barplan addons on\|off`, `chat on\|off`, `keys on\|off`, `editmode on\|off` | what Apply also sets up |
 | `/barplan minimap` | hide / show the minimap button |
 
 ---

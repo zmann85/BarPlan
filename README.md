@@ -53,8 +53,12 @@ The window also has a **Character specific keybindings** switch that shows and c
 you're on, like the box in the game's keybinding options: on gives it its own set (a copy of the keys it has
 now), off goes back to the account-wide keys.
 
-All three are on by default; each has an On/Off switch in the window (or `/barplan addons on|off`, `/barplan chat
-on|off`, `/barplan keys on|off`). Plans always save all three, so you can switch them on later.
+**Edit Mode layout too.** A plan keeps the Blizzard Edit Mode layout its character uses. Applying it adds that
+layout (replacing an older one of the same name) and makes it the new character's, set up at the reload BarPlan
+offers.
+
+All four are on by default; each has an On/Off switch in the window (or `/barplan addons on|off`, `/barplan chat
+on|off`, `/barplan keys on|off`, `/barplan editmode on|off`). Plans always save all four, so you can switch them on later.
 
 In the window you can also pick which plan new characters of your class are offered, delete a plan, and switch
 off putting learned spells on the bars for this character.
@@ -78,6 +82,7 @@ rank.
 | `/barplan addons on` / `off` | whether Apply also switches your addons |
 | `/barplan chat on` / `off` | whether Apply also sets up your chat tabs |
 | `/barplan keys on` / `off` | whether Apply also sets up your keybindings |
+| `/barplan editmode on` / `off` | whether Apply also sets up your Edit Mode layout |
 | `/barplan minimap` | hide / show the minimap button (also a checkbox in the window) |
 
 `/bplan` works too.

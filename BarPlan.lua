@@ -496,10 +496,82 @@ local function applyBindings(b)
     return r
 end
 
+---------------------------------------------------------------- Edit Mode layout
+-- The character's active Blizzard Edit Mode layout, as its export string (the one Edit Mode's Share > Copy gives)
+-- and name. Applying it adds the layout as an Account layout (replacing an older one of that name) and makes it
+-- active; a reload then sets it up cleanly. EllesmereUI's importer does this when EllesmereUI is installed; the
+-- same steps are done here otherwise. A built-in layout (Modern, Classic) is just made active.
+
+local function presetCount()
+    local mgr = EditModePresetLayoutManager
+    local p = mgr and mgr.GetCopyOfPresetLayouts and mgr:GetCopyOfPresetLayouts()
+    return type(p) == "table" and #p or nil, p
+end
+
+local function readEditMode()
+    if not (C_EditMode and C_EditMode.GetLayouts and C_EditMode.ConvertLayoutInfoToString) then return nil end
+    local ok, info = pcall(C_EditMode.GetLayouts)
+    local n = presetCount()
+    if not (ok and type(info) == "table" and type(info.layouts) == "table" and n) then return nil end
+    local active = info.activeLayout
+    if not active then return nil end
+    if active <= n then return { preset = active } end
+    local layout = info.layouts[active - n]
+    if type(layout) ~= "table" then return nil end
+    local ok2, str = pcall(C_EditMode.ConvertLayoutInfoToString, layout)
+    if not (ok2 and type(str) == "string" and str ~= "") then return nil end
+    return { name = layout.layoutName, str = str }
+end
+
+-- the plan's layout onto this character: "same", "applied" (a reload sets it up), or nil and why
+local function applyEditMode(e)
+    if type(e) ~= "table" then return nil, "no layout in the plan" end
+    if InCombatLockdown() then return nil, "in combat" end
+    local cur = readEditMode()
+    if e.preset then
+        if cur and cur.preset == e.preset then return "same" end
+        if pcall(C_EditMode.SetActiveLayout, e.preset) then return "applied" end
+        return nil, "the game didn't switch it"
+    end
+    if not e.str then return nil, "no layout in the plan" end
+    if cur and cur.name == e.name and cur.str == e.str then return "same" end
+    local E = rawget(_G, "EllesmereUI")
+    if E and E.ApplyPresetEditMode then
+        local ok, done = pcall(E.ApplyPresetEditMode, e.str, e.name)
+        if ok and done then return "applied" end
+    end
+    -- (the same steps without EllesmereUI)
+    local mgr = EditModeManagerFrame
+    if not (mgr and mgr.accountSettings and C_EditMode.ConvertStringToLayoutInfo and C_EditMode.SaveLayouts) then
+        return nil, "Edit Mode isn't ready yet - try Apply again in a moment"
+    end
+    local imported = C_EditMode.ConvertStringToLayoutInfo(e.str)
+    if not imported then return nil, "the layout doesn't fit this game version" end
+    imported.layoutType = Enum.EditModeLayoutType.Account
+    imported.layoutName = e.name
+    if mgr.ReconcileWithModern then pcall(mgr.ReconcileWithModern, mgr, imported) end
+    local ok, info = pcall(C_EditMode.GetLayouts)
+    local n, presets = presetCount()
+    if not (ok and type(info) == "table" and n) then return nil, "Edit Mode isn't ready yet" end
+    for i = 1, #info.layouts do presets[n + i] = info.layouts[i] end
+    local layouts = presets
+    for i = #layouts, n + 1, -1 do if layouts[i].layoutName == e.name then table.remove(layouts, i) end end
+    local slot = #layouts + 1
+    for i = n + 1, #layouts do
+        if layouts[i].layoutType == Enum.EditModeLayoutType.Character then slot = i break end
+    end
+    table.insert(layouts, slot, imported)
+    info.layouts, info.activeLayout = layouts, slot
+    C_EditMode.SaveLayouts(info)
+    C_EditMode.SetActiveLayout(slot)
+    return "applied"
+end
+
 ---------------------------------------------------------------- plans (per class)
 -- BarPlanDB.classes[CLASS] = { plans = { [name] = plan }, default = name }
 -- plan = { slots = { [slot] = entry }, addons = { [addon] = on }, chat = { window, ... },
---         bindings = { set = 1|2, keys = { [key] = action } }, from = "Name-Realm",
+--         bindings = { set = 1|2, keys = { [key] = action } }, editmode = { name, str } or { preset },
+--         from = "Name-Realm",
 --         level = n, made = "date" }
 
 local function classTag()
@@ -586,7 +658,8 @@ function BP.record(name)
     local addons = readAddOns()
     local chat = readChat()
     local binds = readBindings()
-    b.plans[name] = { slots = slots, addons = addons, chat = chat, bindings = binds, from = UnitName("player") .. "-" .. (GetRealmName() or ""),
+    local em = readEditMode()
+    b.plans[name] = { slots = slots, addons = addons, chat = chat, bindings = binds, editmode = em, from = UnitName("player") .. "-" .. (GetRealmName() or ""),
                       level = UnitLevel("player"), made = date("%Y-%m-%d %H:%M") }
     if not BP.defaultName() then b.default = name end
     C.plan = name
@@ -595,7 +668,8 @@ function BP.record(name)
     local aOn, aAll = addOnCount(addons)
     say(string.format("%s \"%s\": %d buttons, %d of %d addons on, chat tabs %s%s%s.%s", was and "replaced" or "saved", name, n, aOn, aAll,
         (chat and chatNames(chat) or "(not readable)") .. (binds and (binds.set == CHAR_SET
-            and (", " .. count(binds.keys) .. " keybindings of its own") or (", " .. count(binds.keys) .. " account-wide keybindings")) or ""),
+            and (", " .. count(binds.keys) .. " keybindings of its own") or (", " .. count(binds.keys) .. " account-wide keybindings")) or "")
+            .. (em and (", Edit Mode layout " .. (em.name or "(built-in)")) or ""),
         (pinned > 0 and (", " .. pinned .. " spells kept at a lower rank") or "")
             .. (spellMacros > 0 and (", " .. spellMacros .. " single-spell macros kept as their spell") or ""),
         skipped > 0 and (" (" .. skipped .. " buttons of a kind it can't place left out)") or "",
@@ -659,6 +733,19 @@ function BP.apply(name)
         elseif kb.accountKeys then say("account-wide keybindings set up as the plan's (" .. kb.accountKeys .. " keys changed).")
         elseif kb.changed > 0 then say("this character uses the account-wide keybindings again, as the plan's character did.") end
     end
+    local layoutDone
+    if DB.opts.editmode then
+        if not plan.editmode then
+            say("this plan has no Edit Mode layout yet - save it again on its character to keep it.")
+        else
+            local okE, res, why = pcall(applyEditMode, plan.editmode)
+            if not okE then say("the Edit Mode layout couldn't be set up: " .. tostring(res))
+            elseif res == "applied" then
+                layoutDone = plan.editmode.name or "a built-in layout"
+                say("Edit Mode layout " .. layoutDone .. " set up - it's in place after the reload.")
+            elseif not res then say("the Edit Mode layout couldn't be set up: " .. tostring(why)) end
+        end
+    end
     local a = DB.opts.addons and applyAddOns(plan.addons)
     if a == false then -- (switched off in the window)
     elseif not a then
@@ -667,9 +754,10 @@ function BP.apply(name)
         if #a.missing > 0 then say("addons of the plan you don't have installed: " .. table.concat(a.missing, ", ")) end
         if (a.on + a.off) > 0 then
             say(string.format("addons switched to the plan's: %d on, %d off - they change at the next reload.", a.on, a.off))
-            if BP.askReload then BP.askReload(a) end
         end
     end
+    local switched = a and (a.on + a.off) > 0
+    if (switched or layoutDone) and BP.askReload then BP.askReload(switched and a or nil, layoutDone) end
     if BP.refreshUI then BP.refreshUI() end
 end
 
@@ -732,6 +820,7 @@ function BP.planInfo(name)
         count(p.slots), p.addons and (aOn .. " addons on") or "no addon list")
         .. (p.chat and ("  ·  " .. #p.chat .. " chat tabs") or "")
         .. (p.bindings and (p.bindings.set == CHAR_SET and ("  ·  own keybindings") or "  ·  account keybindings") or "")
+        .. (p.editmode and ("  ·  layout " .. (p.editmode.name or "built-in")) or "")
 end
 
 function BP.status()
@@ -1023,9 +1112,10 @@ local function alsoText()
     if o.addons then t[#t + 1] = "addons" end
     if o.chat then t[#t + 1] = "chat tabs" end
     if o.keys then t[#t + 1] = "keybindings" end
+    if o.editmode then t[#t + 1] = "Edit Mode layout" end
     if #t == 0 then return nil end
     local list = #t == 1 and t[1] or (table.concat(t, ", ", 1, #t - 1) .. " and " .. t[#t])
-    return "your " .. list .. " are switched to the plan's"
+    return "your " .. list .. (#t == 1 and t[1] == "Edit Mode layout" and " is" or " are") .. " switched to the plan's"
 end
 
 local win
@@ -1047,7 +1137,7 @@ local function build()
     end)
     tinsert(UISpecialFrames, "BarPlanFrame") -- Escape closes it (as Itinerary's settings)
     panelBg(win)
-    win.title, win.desc, win.eyebrow = header(win, "", "Save your bars, which addons are on, your chat tabs and keybindings as a plan of your class. A new character picks one and gets the same bars, and (as set below) addons, chat tabs and keybindings; the spells it learns go onto their buttons.")
+    win.title, win.desc, win.eyebrow = header(win, "", "Save your bars, which addons are on, your chat tabs, keybindings and Edit Mode layout as a plan of your class. A new character picks one and gets the same bars, and (as set below) the rest; the spells it learns go onto their buttons.")
     win.divs = {}
     for i = 1, 7 do win.divs[i] = newDivider(win) end
 
@@ -1104,12 +1194,15 @@ local function build()
     win.optKeysHead, win.optKeysDesc = rowText(win, "Keybindings", true)
     win.optKeysDesc:SetText("Apply gives this character the plan's keybindings: its own set when the plan's character had one, otherwise the account-wide keys, set to the plan's.")
     win.optKeys = switch(win, { "On", "Off" }, function(on) DB.opts.keys = on; win.applyArmed = nil; BP.refreshUI() end)
+    win.optEMHead, win.optEMDesc = rowText(win, "Edit Mode layout", true)
+    win.optEMDesc:SetText("Apply adds the plan's Edit Mode layout and makes it this character's (set up at a reload).")
+    win.optEM = switch(win, { "On", "Off" }, function(on) DB.opts.editmode = on; win.applyArmed = nil; BP.refreshUI() end)
     win.charKeysHead, win.charKeysDesc = rowText(win, "Character specific keybindings", true)
     win.charKeys = switch(win, { "On", "Off" }, function(on) BP.setCharBindings(on) end)
 
     -- save your bars
     win.saveHead, win.saveDesc = rowText(win, "Save your bars")
-    win.saveDesc:SetText("Every button of your bars (spells, macros, items), which addons are on, your chat tabs and keybindings, under a name.")
+    win.saveDesc:SetText("Every button of your bars (spells, macros, items), which addons are on, your chat tabs, keybindings and Edit Mode layout, under a name.")
     win.name = editBox(win, 220)
     win.name:SetMaxLetters(40)
     win.name:SetScript("OnEnterPressed", function(self) self:ClearFocus(); win.save:Click() end)
@@ -1137,7 +1230,7 @@ local function build()
     win.hint = text(win, 11, 1, 1, 1, 0.3)
     win.hint:SetWidth(W - PAD * 2)
     win.hint:SetWordWrap(true)
-    win.hint:SetText("Plans are per class and shared by all your characters. Applying one changes this character only: its bars, and its addons, chat tabs and keybindings when those are on. Drag the window anywhere; Escape closes it.")
+    win.hint:SetText("Plans are per class and shared by all your characters. Applying one changes this character only: its bars, and the rest as switched on. Drag the window anywhere; Escape closes it.")
     win:SetScript("OnShow", function() BP.refreshUI() end)
     win:Hide()
 end
@@ -1177,6 +1270,8 @@ local function layout()
     row(win.optChatHead, win.optChatDesc, win.optChat)
     y = y + 2
     row(win.optKeysHead, win.optKeysDesc, win.optKeys)
+    y = y + 2
+    row(win.optEMHead, win.optEMDesc, win.optEM)
     y = y + 2
     row(win.charKeysHead, win.charKeysDesc, win.charKeys)
     y = y + 12; div()
@@ -1237,6 +1332,7 @@ function BP.refreshUI()
     win.optAdd:Set(DB.opts.addons)
     win.optChat:Set(DB.opts.chat)
     win.optKeys:Set(DB.opts.keys)
+    win.optEM:Set(DB.opts.editmode)
     local own = charBindings() and true or false
     win.charKeysDesc:SetText(own and "This character uses its own keybindings (as the game's \"character specific\" box). Off: back to the account-wide keys."
         or "This character uses the account-wide keybindings. On: its own set, starting as a copy of the keys you have now.")
@@ -1290,7 +1386,7 @@ BP.askApply = askApply
 
 -- after an apply switched addons: they change at a reload, offered here (a click, as the game wants for it)
 local rel
-function BP.askReload(a)
+function BP.askReload(a, layout)
     if not rel then
         rel = CreateFrame("Frame", "BarPlanReload", UIParent)
         rel:SetSize(W, 160)
@@ -1298,14 +1394,17 @@ function BP.askReload(a)
         rel:SetFrameStrata("DIALOG")
         rel:EnableMouse(true)
         panelBg(rel)
-        rel.title, rel.desc, rel.eyebrow = header(rel, "Reload for your addons?", "")
+        rel.title, rel.desc, rel.eyebrow = header(rel, "Reload now?", "")
         rel.yes = flat(rel, "Reload now", 130)
         rel.yes:SetActive(true)
         rel.yes:SetScript("OnClick", function() ReloadUI() end)
         rel.no = flat(rel, "Later", 90)
-        rel.no:SetScript("OnClick", function() rel:Hide(); say("your addons change at the next reload or login") end)
+        rel.no:SetScript("OnClick", function() rel:Hide(); say("the changes take effect at the next reload or login") end)
     end
-    rel.desc:SetText(string.format("The plan's addons are set for this character (%d switched on, %d off). They take effect when the interface reloads.", a.on, a.off))
+    local parts = {}
+    if a then parts[#parts + 1] = string.format("the plan's addons are set for this character (%d switched on, %d off)", a.on, a.off) end
+    if layout then parts[#parts + 1] = "the Edit Mode layout " .. layout .. " is in place" end
+    rel.desc:SetText(((table.concat(parts, ", and "):gsub("^%l", string.upper))) .. ". A reload sets it all up.")
     local y = 16
     at(rel.eyebrow, rel, PAD, y); y = y + strH(rel.eyebrow, 12) + 4
     at(rel.title, rel, PAD, y); y = y + strH(rel.title, 19) + 6
@@ -1387,6 +1486,7 @@ f:SetScript("OnEvent", function(_, event, arg)
         if BarPlanDB.opts.addons == nil then BarPlanDB.opts.addons = true end
         if BarPlanDB.opts.chat == nil then BarPlanDB.opts.chat = true end
         if BarPlanDB.opts.keys == nil then BarPlanDB.opts.keys = true end
+        if BarPlanDB.opts.editmode == nil then BarPlanDB.opts.editmode = true end
         BarPlanCharDB = BarPlanCharDB or {}
         BarPlanCharDB.placed = BarPlanCharDB.placed or {}
         DB, C = BarPlanDB, BarPlanCharDB
@@ -1429,10 +1529,10 @@ SlashCmdList.BARPLAN = function(msg)
         if BP.refreshUI then BP.refreshUI() end
     elseif cmd == "off" then C.off = true; say("learned spells aren't put on the bars any more (/barplan on)")
     elseif cmd == "on" then C.off = nil; say("learned spells go on their buttons again"); BP.fill()
-    elseif cmd == "addons" or cmd == "chat" or cmd == "keys" then
+    elseif cmd == "addons" or cmd == "chat" or cmd == "keys" or cmd == "editmode" then
         local key = cmd
         if arg == "on" then DB.opts[key] = true elseif arg == "off" then DB.opts[key] = false end
-        say(({ addons = "addons", chat = "chat tabs", keys = "keybindings" })[key] .. " with Apply: " .. (DB.opts[key] and "on" or "off"))
+        say(({ addons = "addons", chat = "chat tabs", keys = "keybindings", editmode = "Edit Mode layout" })[key] .. " with Apply: " .. (DB.opts[key] and "on" or "off"))
         if BP.refreshUI then BP.refreshUI() end
     elseif cmd == "status" then BP.status()
     elseif cmd == "minimap" then BP.setMinimap(DB.minimap.hide and true or false); say(DB.minimap.hide and "minimap button hidden" or "minimap button shown")
@@ -1440,7 +1540,7 @@ SlashCmdList.BARPLAN = function(msg)
         say("/barplan - the window: save your bars as a plan, pick and apply one")
         say("/barplan save [name] - save this character's bars as a plan of its class (default name: your class)")
         say("/barplan apply [name] - set this character's bars up from a plan of its class")
-        say("/barplan addons on|off, chat on|off, keys on|off - whether Apply also sets up addons / chat tabs / keybindings")
+        say("/barplan addons on|off, chat on|off, keys on|off, editmode on|off - what Apply also sets up")
         say("/barplan status / list / use <name> / delete <name> / off / on / minimap")
     end
 end

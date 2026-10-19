@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Title: BarPlan
-## Notes: Your action bars as a plan: record a character's bars once, set up a new character of that class from it, and every spell you learn later goes straight into its slot. Keeps which addons are on, your chat tabs and keybindings, too.
+## Notes: Your action bars as a plan: record a character's bars once, set up a new character of that class from it, and every spell you learn later goes straight into its slot. Keeps which addons are on, your chat tabs, keybindings and Edit Mode layout, too.
 ## Author: Ghaan
 ## Version: @project-version@
 ## IconTexture: Interface\Icons\INV_Misc_Note_01
