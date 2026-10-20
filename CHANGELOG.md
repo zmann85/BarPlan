@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.9.1 (2026-10-20)
+
+### Fixed
+- A spell you learn was left where the game put it, on the first empty button: on a button the plan keeps for a
+  spell you haven't learned yet (which then never went there), or on one the plan keeps empty. A spell the game
+  places as you learn it now goes off any button the plan doesn't have it on, so the plan's buttons stay free.
+
 ## v1.9.0 (2026-10-19)
 
 ### New

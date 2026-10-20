@@ -763,7 +763,13 @@ end
 
 -- a spell you just learned (or a new rank): onto its planned button when that's empty or holds an older rank.
 -- A button you emptied yourself after the plan filled it stays empty; one you put something else on is yours.
+-- The game puts a spell you learn onto the first empty button it finds. Spells learned in the last moments are
+-- remembered (by name, for RECENT seconds), and a button holding one of them that the plan doesn't have it on
+-- is emptied: the plan's buttons stay free for the spells planned there, and buttons the plan keeps empty stay
+-- empty. A spell you drag onto a button yourself later is yours.
 local pending = false
+local RECENT = 10
+local knownSpells, recent = nil, {}
 function BP.fill()
     if not (C and C.plan) or C.off then return end
     local plan = BP.plan(C.plan)
@@ -771,7 +777,23 @@ function BP.fill()
     if InCombatLockdown() then pending = true return end
     pending = false
     local book = scanBook()
-    local news, fresh = {}, {}
+    local now = GetTime()
+    if knownSpells then
+        for name in pairs(book) do if not knownSpells[name] then recent[name] = now end end
+    end
+    knownSpells = {}
+    for name in pairs(book) do knownSpells[name] = true end
+    for name, t in pairs(recent) do if now - t > RECENT then recent[name] = nil end end
+    if next(recent) then
+        for slot = 1, MAX_SLOT do
+            local cur = readSlot(slot)
+            if cur and cur.k == "spell" and recent[cur.name] then
+                local e = plan.slots[slot]
+                if not (e and e.k == "spell" and e.name == cur.name) then clearSlot(slot) end
+            end
+        end
+    end
+    local news = {}
     for slot, e in pairs(plan.slots) do
         if e.k == "spell" and book[e.name] then
             local cur = readSlot(slot)
@@ -779,20 +801,10 @@ function BP.fill()
             if not cur then
                 if C.placed[slot] ~= e.name and place(slot, e, book) then
                     C.placed[slot] = e.name
-                    fresh[e.name] = true
                     news[#news + 1] = describe({ k = "spell", name = e.name, rank = r })
                 end
             elseif cur.k == "spell" and cur.name == e.name and r and cur.rank < r then
                 if place(slot, e, book) then news[#news + 1] = describe({ k = "spell", name = e.name, rank = r }) end
-            end
-        end
-    end
-    -- (a spell the game itself put on a free button as you learned it: its place is the plan's)
-    if next(fresh) then
-        for slot = 1, MAX_SLOT do
-            if not plan.slots[slot] then
-                local cur = readSlot(slot)
-                if cur and cur.k == "spell" and fresh[cur.name] then clearSlot(slot) end
             end
         end
     end
@@ -1453,7 +1465,8 @@ local f = CreateFrame("Frame")
 -- (each on its own: a client that doesn't know an event name throws, and the rest of the file wouldn't run -
 -- WoW Forever has no LEARNED_SPELL_IN_TAB)
 for _, e in ipairs({ "ADDON_LOADED", "PLAYER_LOGIN", "SPELLS_CHANGED", "LEARNED_SPELL_IN_TAB",
-                     "LEARNED_SPELL_IN_SKILL_LINE", "PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED", "UPDATE_BINDINGS" }) do
+                     "LEARNED_SPELL_IN_SKILL_LINE", "PLAYER_REGEN_ENABLED", "PLAYER_REGEN_DISABLED", "UPDATE_BINDINGS",
+                     "ACTIONBAR_SLOT_CHANGED" }) do
     pcall(f.RegisterEvent, f, e)
 end
 local soon = false
@@ -1504,6 +1517,9 @@ f:SetScript("OnEvent", function(_, event, arg)
     elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_REGEN_DISABLED" then
         if event == "PLAYER_REGEN_ENABLED" and pending then fillSoon() end
         if BP.refreshUI then BP.refreshUI() end
+    elseif event == "ACTIONBAR_SLOT_CHANGED" then
+        -- (only worth a look while a spell was just learned: the game placing it)
+        if DB and next(recent) then fillSoon() end
     elseif (event == "SPELLS_CHANGED" or event == "LEARNED_SPELL_IN_TAB" or event == "LEARNED_SPELL_IN_SKILL_LINE") and DB then
         fillSoon()
     end
