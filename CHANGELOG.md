@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.10.1 (2026-10-21)
+
+### Fixed
+- The reload question after Apply could sit behind or overlap other windows. It now stays in front of everything,
+  in the middle of the screen.
+
+## v1.10.0 (2026-10-20)
+
+### New
+- Share a plan as a text string: Export in the window (or `/barplan export [name]`) shows it to copy; Import
+  (`/barplan import`) adds a plan from one to its class, on any character or account. Macros that run code
+  (`/run`, `/script`, `/console`, `/click` ...) are left out of an imported plan.
+
 ## v1.9.1 (2026-10-20)
 
 ### Fixed

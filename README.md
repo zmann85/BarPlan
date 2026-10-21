@@ -60,6 +60,11 @@ offers.
 All four are on by default; each has an On/Off switch in the window (or `/barplan addons on|off`, `/barplan chat
 on|off`, `/barplan keys on|off`, `/barplan editmode on|off`). Plans always save all four, so you can switch them on later.
 
+**Share a plan.** Export (in the window, or `/barplan export [name]`) gives the plan as a text string to keep or
+send on; Import (`/barplan import`) adds one as a plan of its class, on any character or account. Macros that run
+code (`/run`, `/script`, `/console`, `/click` ...) are left out of an imported plan, so its buttons can only cast,
+use, target or say things.
+
 In the window you can also pick which plan new characters of your class are offered, delete a plan, and switch
 off putting learned spells on the bars for this character.
 
@@ -83,6 +88,7 @@ rank.
 | `/barplan chat on` / `off` | whether Apply also sets up your chat tabs |
 | `/barplan keys on` / `off` | whether Apply also sets up your keybindings |
 | `/barplan editmode on` / `off` | whether Apply also sets up your Edit Mode layout |
+| `/barplan export [name]` / `import` | share a plan as text / add one from text |
 | `/barplan minimap` | hide / show the minimap button (also a checkbox in the window) |
 
 `/bplan` works too.
@@ -100,3 +106,5 @@ Embedded in `libs/` for the minimap button, each under its own license:
 - CallbackHandler-1.0 - Ace3 Development Team, BSD license (libs/CallbackHandler-1.0/LICENSE.txt).
 - LibDataBroker-1.1 - tekkub.
 - LibDBIcon-1.0 - funkydude, Ace3-style BSD license.
+- LibDeflate - Haoqian He, zlib license (libs/LibDeflate/LICENSE.txt).
+- LibSerialize - Ross Nichols, MIT license (libs/LibSerialize/LICENSE).

@@ -15,6 +15,10 @@ Set up one character's bars the way you like them, save them as a plan, and ever
 
 Addons, chat tabs, keybindings and the Edit Mode layout each have an On/Off switch, all on by default.
 
+## Share a plan
+
+**Export** turns a plan into a text string to keep or send to a friend; **Import** adds one as a plan of its class, on any character or account. Macros that run code (`/run`, `/script`, `/console`, `/click` ...) are left out of an imported plan, so its buttons can only cast, use, target or say things.
+
 ---
 
 ## How to use it
@@ -38,6 +42,7 @@ A button you empty yourself after BarPlan filled it stays empty, and a button yo
 | `/barplan list` / `use <name>` / `delete <name>` | your class's plans, the one new characters are offered, delete one |
 | `/barplan off` / `on` | stop / resume putting learned spells on the bars |
 | `/barplan addons on\|off`, `chat on\|off`, `keys on\|off`, `editmode on\|off` | what Apply also sets up |
+| `/barplan export [name]` / `import` | share a plan as text / add one from text |
 | `/barplan minimap` | hide / show the minimap button |
 
 ---

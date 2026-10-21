@@ -25,6 +25,10 @@ Libraries (libs folder)
   libs/CallbackHandler-1.0/LICENSE.txt.
 - LibDataBroker-1.1 - tekkub. https://github.com/tekkub/libdatabroker-1-1
 - LibDBIcon-1.0 - funkydude. Ace3-style BSD license (as stated on its WowAce project page).
+- LibDeflate - Haoqian He (SafeteeWoW). zlib license, see libs/LibDeflate/LICENSE.txt.
+  https://github.com/SafeteeWoW/LibDeflate
+- LibSerialize - Ross Nichols. MIT license, see libs/LibSerialize/LICENSE.
+  https://github.com/rossnichols/LibSerialize
 
 Ace3 BSD license (CallbackHandler-1.0)
 --------------------------------------

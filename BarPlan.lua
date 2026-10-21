@@ -835,6 +835,118 @@ function BP.planInfo(name)
         .. (p.editmode and ("  ·  layout " .. (p.editmode.name or "built-in")) or "")
 end
 
+---------------------------------------------------------------- sharing a plan as a text string
+-- "!BP1!" .. printable(deflate(serialize({ fmt, class, name, plan }))). Nothing in a string is ever run: it is
+-- data, checked on import. Macros that run code (/run, /script, /console ...) or that click buttons are left out
+-- of an imported plan, so pressing one of its buttons can only cast, use, target or say things.
+local PREFIX = "!BP1!"
+local LibSerialize = LibStub and LibStub("LibSerialize", true)
+local LibDeflate = LibStub and LibStub("LibDeflate", true)
+
+function BP.export(name)
+    local plan = BP.plan(name)
+    if not plan then return nil, "your class has no plan called \"" .. tostring(name) .. "\"" end
+    if not (LibSerialize and LibDeflate) then return nil, "the libraries for sharing are missing" end
+    local payload = { fmt = 1, class = classTag(), name = name, plan = plan }
+    local packed = LibDeflate:CompressDeflate(LibSerialize:Serialize(payload), { level = 9 })
+    return PREFIX .. LibDeflate:EncodeForPrint(packed)
+end
+
+-- plain data only: strings, numbers, booleans and tables of them, not too deep or too big
+local function clean(v, depth)
+    local t = type(v)
+    if t == "string" then return #v <= 20000 and v or nil end
+    if t == "number" then return (v == v and v ~= math.huge and v ~= -math.huge) and v or nil end
+    if t == "boolean" then return v end
+    if t ~= "table" or depth > 6 then return nil end
+    local out, n = {}, 0
+    for k, x in pairs(v) do
+        n = n + 1
+        if n > 5000 then break end
+        if type(k) == "string" or type(k) == "number" then
+            local c = clean(x, depth + 1)
+            if c ~= nil then out[k] = c end
+        end
+    end
+    return out
+end
+
+local UNSAFE = { ["/run"] = true, ["/script"] = true, ["/console"] = true, ["/click"] = true, ["/dump"] = true,
+                 ["/tinspect"] = true, ["/eventtrace"] = true, ["/framestack"] = true }
+local function safeMacro(body)
+    if type(body) ~= "string" then return false end
+    for line in body:gmatch("[^\r\n]+") do
+        local cmd = line:match("^%s*(/%S+)")
+        if cmd and UNSAFE[cmd:lower()] then return false end
+    end
+    return true
+end
+
+-- the plan in a string, checked: returns { class, name, plan, dropped = { macro names } } or nil and why
+function BP.decode(str)
+    if not (LibSerialize and LibDeflate) then return nil, "the libraries for sharing are missing" end
+    str = tostring(str or ""):gsub("%s+", "")
+    if str:sub(1, #PREFIX) ~= PREFIX then return nil, "this isn't a BarPlan plan (it should start with " .. PREFIX .. ")" end
+    local packed = LibDeflate:DecodeForPrint(str:sub(#PREFIX + 1))
+    local ser = packed and LibDeflate:DecompressDeflate(packed)
+    if not ser then return nil, "the text is damaged or incomplete - copy it again, all of it" end
+    local ok, p = LibSerialize:Deserialize(ser)
+    if not ok or type(p) ~= "table" or p.fmt ~= 1 then return nil, "the text couldn't be read" end
+    p = clean(p, 0)
+    local plan = p.plan
+    if type(plan) ~= "table" or type(plan.slots) ~= "table" or type(p.class) ~= "string" then
+        return nil, "there is no plan in this text"
+    end
+    local slots, dropped = {}, {}
+    for slot, e in pairs(plan.slots) do
+        slot = tonumber(slot)
+        if slot and slot >= 1 and slot <= MAX_SLOT and type(e) == "table" then
+            if e.k == "spell" and type(e.name) == "string" then
+                slots[slot] = { k = "spell", name = e.name, rank = tonumber(e.rank) or 0, pin = tonumber(e.pin) }
+            elseif e.k == "item" and tonumber(e.id) then
+                slots[slot] = { k = "item", id = tonumber(e.id), name = type(e.name) == "string" and e.name or nil }
+            elseif e.k == "macro" and type(e.name) == "string" then
+                if safeMacro(e.body) then
+                    slots[slot] = { k = "macro", name = e.name:sub(1, 16), icon = e.icon, body = e.body:sub(1, 255),
+                                    char = e.char and true or nil }
+                else
+                    dropped[#dropped + 1] = e.name
+                end
+            end
+        end
+    end
+    plan.slots = slots
+    if type(plan.addons) == "table" then
+        local a = {}
+        for k, v in pairs(plan.addons) do if type(k) == "string" and type(v) == "boolean" then a[k] = v end end
+        plan.addons = a
+    end
+    if plan.bindings and not (type(plan.bindings) == "table" and type(plan.bindings.keys) == "table") then plan.bindings = nil end
+    if plan.editmode and not (type(plan.editmode) == "table" and (type(plan.editmode.str) == "string" or tonumber(plan.editmode.preset))) then
+        plan.editmode = nil
+    end
+    if type(plan.chat) ~= "table" then plan.chat = nil end
+    table.sort(dropped)
+    return { class = p.class:upper(), name = type(p.name) == "string" and p.name or p.class, plan = plan, dropped = dropped }
+end
+
+-- add a decoded plan under <name> to its class's plans (replacing one of that name)
+function BP.importPlan(d, name)
+    name = (name or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    if name == "" then name = d.name end
+    local b = bucket(d.class)
+    local was = b.plans[name] ~= nil
+    d.plan.from = d.plan.from or "imported"
+    d.plan.made = d.plan.made or date("%Y-%m-%d %H:%M")
+    b.plans[name] = d.plan
+    if not b.default or not b.plans[b.default] then b.default = name end
+    local cls = (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[d.class]) or d.class
+    say(string.format("%s %s plan \"%s\" (%d buttons)%s.", was and "replaced" or "added", cls, name, count(d.plan.slots),
+        #d.dropped > 0 and ("; left out macros that run code: " .. table.concat(d.dropped, ", ")) or ""))
+    if BP.refreshUI then BP.refreshUI() end
+    return name
+end
+
 function BP.status()
     local plan, name = BP.planFor()
     if not plan then say("no plan for your class yet - save one on a character whose bars are done (/barplan).") return end
@@ -1174,6 +1286,10 @@ local function build()
         win.applyArmed = nil
         BP.apply(win.sel)
     end)
+    win.export = flat(win, "Export", 84)
+    win.export:SetScript("OnClick", function() if win.sel then BP.showExport(win.sel) end end)
+    win.import = flat(win, "Import", 84)
+    win.import:SetScript("OnClick", function() BP.showImport() end)
     win.del = flat(win, "Delete", 84)
     win.del:SetScript("OnClick", function()
         if not win.sel then return end
@@ -1274,6 +1390,9 @@ local function layout()
     atRight(win.del, win, y)
     win.apply:ClearAllPoints(); win.apply:SetPoint("RIGHT", win.del, "LEFT", -6, 0)
     y = y + 22 + 6
+    atRight(win.import, win, y)
+    win.export:ClearAllPoints(); win.export:SetPoint("RIGHT", win.import, "LEFT", -6, 0)
+    y = y + 22 + 6
     at(win.info, win, PAD, y); y = y + strH(win.info, 11) + 2
     row(win.offerHead, win.offerDesc, win.offer)
     y = y + 12; div()
@@ -1330,6 +1449,7 @@ function BP.refreshUI()
     win.apply:SetLabel(win.applyArmed and "Sure?" or "Apply")
     win.apply:SetActive(win.applyArmed)
     win.del:SetUsable(win.sel ~= nil)
+    win.export:SetUsable(win.sel ~= nil)
     win.del:SetLabel(win.delArmed and "Sure?" or "Delete")
     win.del:SetActive(win.delArmed)
     win.offerHead:SetText("Offer it to new " .. cls .. "s")
@@ -1396,14 +1516,134 @@ local function askApply(name)
 end
 BP.askApply = askApply
 
+-- a text window for sharing: export shows the string (selected, Ctrl+C), import takes one (Ctrl+V)
+local share
+local function shareWindow()
+    if share then return share end
+    share = CreateFrame("Frame", "BarPlanShare", UIParent)
+    share:SetSize(W, 320)
+    share:SetPoint("CENTER", 0, 40)
+    share:SetFrameStrata("FULLSCREEN_DIALOG")
+    share:EnableMouse(true)
+    share:SetMovable(true)
+    share:RegisterForDrag("LeftButton")
+    share:SetScript("OnDragStart", share.StartMoving)
+    share:SetScript("OnDragStop", share.StopMovingOrSizing)
+    tinsert(UISpecialFrames, "BarPlanShare")
+    panelBg(share, 0.99)
+    share.title, share.desc, share.eyebrow = header(share, "", "")
+    share.scroll = CreateFrame("ScrollFrame", nil, share, "UIPanelScrollFrameTemplate")
+    share.scroll:SetSize(W - PAD * 2 - 24, 150)
+    share.box = CreateFrame("EditBox", nil, share.scroll)
+    share.box:SetMultiLine(true)
+    share.box:SetAutoFocus(false)
+    share.box:SetFont(fontPath(), 11, "")
+    share.box:SetTextColor(1, 1, 1, 0.85)
+    share.box:SetWidth(W - PAD * 2 - 30)
+    share.box:SetScript("OnEscapePressed", function() share:Hide() end)
+    share.scroll:SetScrollChild(share.box)
+    share.boxBg = share:CreateTexture(nil, "BACKGROUND", nil, 1)
+    share.boxBg:SetColorTexture(0, 0, 0, 0.35)
+    share.boxBg:SetPoint("TOPLEFT", share.scroll, "TOPLEFT", -6, 6)
+    share.boxBg:SetPoint("BOTTOMRIGHT", share.scroll, "BOTTOMRIGHT", 26, -6)
+    share.nameLabel = text(share, 12, 1, 1, 1, 0.7)
+    share.nameLabel:SetText("Save as")
+    share.name = editBox(share, 200)
+    share.name:SetMaxLetters(40)
+    share.note = text(share, 11, 1, 1, 1, 0.5)
+    share.note:SetWidth(W - PAD * 2)
+    share.note:SetWordWrap(true)
+    share.go = flat(share, "Import", 100)
+    share.go:SetActive(true)
+    share.close = flat(share, "Close", 90)
+    share.close:SetScript("OnClick", function() share:Hide() end)
+    return share
+end
+
+local function layoutShare(withName)
+    local y = 16
+    at(share.eyebrow, share, PAD, y); y = y + strH(share.eyebrow, 12) + 4
+    at(share.title, share, PAD, y); y = y + strH(share.title, 19) + 6
+    at(share.desc, share, PAD, y); y = y + strH(share.desc, 28) + 14
+    at(share.scroll, share, PAD + 6, y); y = y + 150 + 16
+    if withName then
+        at(share.nameLabel, share, PAD, y + 4)
+        at(share.name, share, PAD + 60, y)
+        share.nameLabel:Show(); share.name:Show()
+        y = y + 22 + 10
+    else
+        share.nameLabel:Hide(); share.name:Hide()
+    end
+    if (share.note:GetText() or "") ~= "" then at(share.note, share, PAD, y); y = y + strH(share.note, 11) + 10; share.note:Show() else share.note:Hide() end
+    if withName then
+        at(share.go, share, PAD, y); share.go:Show()
+        share.close:ClearAllPoints(); share.close:SetPoint("LEFT", share.go, "RIGHT", 6, 0)
+    else
+        share.go:Hide(); at(share.close, share, PAD, y)
+    end
+    y = y + 22 + 16
+    share:SetHeight(y)
+end
+
+function BP.showExport(name)
+    local str, why = BP.export(name)
+    if not str then say(why) return end
+    shareWindow()
+    share.title:SetText("Share \"" .. name .. "\"")
+    share.desc:SetText("Copy this text (Ctrl+C) and keep it or send it on. BarPlan's Import adds it as a plan of your class, on any account. It holds the bars, macros, addon list, chat tabs, keybindings and Edit Mode layout.")
+    share.note:SetText(#str .. " characters")
+    share.box:SetText(str)
+    share.box:SetScript("OnTextChanged", function(self, user) if user then self:SetText(str); self:HighlightText() end end)
+    layoutShare(false)
+    share:Show()
+    share.box:SetFocus()
+    share.box:HighlightText()
+end
+
+function BP.showImport()
+    shareWindow()
+    share.title:SetText("Import a plan")
+    share.desc:SetText("Paste a BarPlan text (Ctrl+V), check the name, then Import. The plan joins the plans of its class, and a plan of the same name is replaced.")
+    share.box:SetText("")
+    share.name:SetText("")
+    share.note:SetText("")
+    local decoded
+    share.box:SetScript("OnTextChanged", function(self)
+        local d, why = BP.decode(self:GetText())
+        decoded = d
+        if d then
+            if (share.name:GetText() or "") == "" then share.name:SetText(d.name) end
+            local cls = (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[d.class]) or d.class
+            share.note:SetText(string.format("%s plan, %d buttons%s.", cls, count(d.plan.slots),
+                #d.dropped > 0 and (" - macros that run code are left out: " .. table.concat(d.dropped, ", ")) or ""))
+        else
+            share.note:SetText((self:GetText() or "") ~= "" and ("Can't use this: " .. why .. ".") or "")
+        end
+        share.go:SetUsable(d ~= nil)
+        layoutShare(true)
+    end)
+    share.go:SetScript("OnClick", function()
+        if not decoded then return end
+        BP.importPlan(decoded, share.name:GetText())
+        share:Hide()
+    end)
+    share.go:SetUsable(false)
+    layoutShare(true)
+    share:Show()
+    share.box:SetFocus()
+end
+
 -- after an apply switched addons: they change at a reload, offered here (a click, as the game wants for it)
 local rel
 function BP.askReload(a, layout)
     if not rel then
         rel = CreateFrame("Frame", "BarPlanReload", UIParent)
         rel:SetSize(W, 160)
-        rel:SetPoint("TOP", UIParent, "TOP", 0, -160)
-        rel:SetFrameStrata("DIALOG")
+        rel:SetPoint("CENTER", UIParent, "CENTER", 0, 120)
+        -- above everything else on screen (other addons' windows, BarPlan's own), whatever opens later
+        rel:SetFrameStrata("TOOLTIP")
+        rel:SetToplevel(true)
+        rel:SetClampedToScreen(true)
         rel:EnableMouse(true)
         panelBg(rel)
         rel.title, rel.desc, rel.eyebrow = header(rel, "Reload now?", "")
@@ -1425,7 +1665,12 @@ function BP.askReload(a, layout)
     rel.no:ClearAllPoints(); rel.no:SetPoint("LEFT", rel.yes, "RIGHT", 6, 0)
     y = y + 22 + 16
     rel:SetHeight(y)
+    if ask and ask:IsShown() then ask:Hide() end
+    rel:SetFrameLevel(9000)
     rel:Show()
+    rel:Raise()
+    -- (raised again in a moment: a window another addon opens right after the reload of its own settings)
+    C_Timer.After(0.5, function() if rel:IsShown() then rel:Raise() end end)
 end
 
 ---------------------------------------------------------------- the minimap button
@@ -1550,6 +1795,10 @@ SlashCmdList.BARPLAN = function(msg)
         if arg == "on" then DB.opts[key] = true elseif arg == "off" then DB.opts[key] = false end
         say(({ addons = "addons", chat = "chat tabs", keys = "keybindings", editmode = "Edit Mode layout" })[key] .. " with Apply: " .. (DB.opts[key] and "on" or "off"))
         if BP.refreshUI then BP.refreshUI() end
+    elseif cmd == "export" then
+        local n = arg ~= "" and arg or (C.plan and BP.plan(C.plan) and C.plan) or BP.defaultName()
+        if n then BP.showExport(n) else say("no plan to export - /barplan list") end
+    elseif cmd == "import" then BP.showImport()
     elseif cmd == "status" then BP.status()
     elseif cmd == "minimap" then BP.setMinimap(DB.minimap.hide and true or false); say(DB.minimap.hide and "minimap button hidden" or "minimap button shown")
     else
@@ -1557,6 +1806,7 @@ SlashCmdList.BARPLAN = function(msg)
         say("/barplan save [name] - save this character's bars as a plan of its class (default name: your class)")
         say("/barplan apply [name] - set this character's bars up from a plan of its class")
         say("/barplan addons on|off, chat on|off, keys on|off, editmode on|off - what Apply also sets up")
+        say("/barplan export [name] / import - share a plan as text, add one from text")
         say("/barplan status / list / use <name> / delete <name> / off / on / minimap")
     end
 end
