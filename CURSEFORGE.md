@@ -17,7 +17,7 @@ Addons, chat tabs, keybindings and the Edit Mode layout each have an On/Off swit
 
 ## Share a plan
 
-**Export** turns a plan into a text string to keep or send to a friend; **Import** adds one as a plan of its class, on any character or account. Macros that run code (`/run`, `/script`, `/console`, `/click` ...) are left out of an imported plan, so its buttons can only cast, use, target or say things.
+**Export** turns a plan into a text string to keep or send to a friend, **Export all** puts every plan of every class into one; **Import** adds what a string holds, each plan to its class, on any character or account. The plan list shows the plans of every class, so you can export them all from one character. A name you already have gets a number, so nothing is replaced by accident. Macros that run code (`/run`, `/script`, `/console`, `/click` ...) are left out of an imported plan unless you tick the box for them.
 
 ---
 
@@ -42,7 +42,7 @@ A button you empty yourself after BarPlan filled it stays empty, and a button yo
 | `/barplan list` / `use <name>` / `delete <name>` | your class's plans, the one new characters are offered, delete one |
 | `/barplan off` / `on` | stop / resume putting learned spells on the bars |
 | `/barplan addons on\|off`, `chat on\|off`, `keys on\|off`, `editmode on\|off` | what Apply also sets up |
-| `/barplan export [name]` / `import` | share a plan as text / add one from text |
+| `/barplan export [name]` / `exportall` / `import` | share a plan (or all) as text / add from text |
 | `/barplan minimap` | hide / show the minimap button |
 
 ---

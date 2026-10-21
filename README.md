@@ -60,10 +60,13 @@ offers.
 All four are on by default; each has an On/Off switch in the window (or `/barplan addons on|off`, `/barplan chat
 on|off`, `/barplan keys on|off`, `/barplan editmode on|off`). Plans always save all four, so you can switch them on later.
 
-**Share a plan.** Export (in the window, or `/barplan export [name]`) gives the plan as a text string to keep or
-send on; Import (`/barplan import`) adds one as a plan of its class, on any character or account. Macros that run
-code (`/run`, `/script`, `/console`, `/click` ...) are left out of an imported plan, so its buttons can only cast,
-use, target or say things.
+**Share plans.** The window's plan list shows the plans of every class (yours first), so you can export any of
+them from any character; Apply stays for your own class. Export (or `/barplan export [name]`) gives the chosen
+plan as a text string to keep or send on, Export all (`/barplan exportall`) every plan in one string; Import
+(`/barplan import`) adds what a string holds, each plan to its class, on any character or account. A name you
+already have gets a number ("Paladin (2)"), so nothing is replaced by accident. Macros that run code (`/run`,
+`/script`, `/console`, `/click` ...) are left out of an imported plan by default, so its buttons can only cast,
+use, target or say things; a checkbox in the import window takes them in too, if you trust the text.
 
 In the window you can also pick which plan new characters of your class are offered, delete a plan, and switch
 off putting learned spells on the bars for this character.
@@ -88,7 +91,7 @@ rank.
 | `/barplan chat on` / `off` | whether Apply also sets up your chat tabs |
 | `/barplan keys on` / `off` | whether Apply also sets up your keybindings |
 | `/barplan editmode on` / `off` | whether Apply also sets up your Edit Mode layout |
-| `/barplan export [name]` / `import` | share a plan as text / add one from text |
+| `/barplan export [name]` / `exportall` / `import` | share a plan (or all) as text / add from text |
 | `/barplan minimap` | hide / show the minimap button (also a checkbox in the window) |
 
 `/bplan` works too.

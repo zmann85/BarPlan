@@ -600,7 +600,25 @@ function BP.planNames()
     table.sort(t, function(a, b) return a:lower() < b:lower() end)
     return t
 end
-function BP.plan(name) return name and bucket().plans[name] end
+function BP.plan(name, class) return name and bucket(class).plans[name] end
+
+-- every plan of every class: { { class, name }, ... }, your class first, then by class and name
+function BP.allPlans()
+    local own, t = classTag(), {}
+    for class, b in pairs(DB.classes) do
+        for name in pairs(b.plans or {}) do t[#t + 1] = { class, name } end
+    end
+    table.sort(t, function(a, b)
+        if (a[1] == own) ~= (b[1] == own) then return a[1] == own end
+        if a[1] ~= b[1] then return a[1] < b[1] end
+        return a[2]:lower() < b[2]:lower()
+    end)
+    return t
+end
+local function classLabel(class)
+    return (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[class]) or class
+end
+BP.classLabel = classLabel
 function BP.defaultName() local b = bucket(); return b.plans[b.default or ""] and b.default or nil end
 
 -- the plan this character follows, else the one new characters of the class get
@@ -616,12 +634,12 @@ function BP.setDefault(name)
     if b.plans[name] then b.default = name end
 end
 
-function BP.delete(name)
-    local b = bucket()
+function BP.delete(name, class)
+    local b = bucket(class)
     if not b.plans[name] then return false end
     b.plans[name] = nil
     if b.default == name then b.default = nil end
-    if C.plan == name then C.plan = nil end
+    if C.plan == name and (not class or class == classTag()) then C.plan = nil end
     return true
 end
 
@@ -823,8 +841,8 @@ function BP.waiting(plan)
     return t
 end
 
-function BP.planInfo(name)
-    local p = BP.plan(name)
+function BP.planInfo(name, class)
+    local p = BP.plan(name, class)
     if not p then return "" end
     local who = tostring(p.from or "?"):match("^[^-]+") or tostring(p.from)
     local aOn = addOnCount(p.addons)
@@ -843,13 +861,26 @@ local PREFIX = "!BP1!"
 local LibSerialize = LibStub and LibStub("LibSerialize", true)
 local LibDeflate = LibStub and LibStub("LibDeflate", true)
 
-function BP.export(name)
-    local plan = BP.plan(name)
-    if not plan then return nil, "your class has no plan called \"" .. tostring(name) .. "\"" end
+function BP.export(name, class)
+    class = class or classTag()
+    local plan = BP.plan(name, class)
+    if not plan then return nil, "there is no " .. classLabel(class) .. " plan called \"" .. tostring(name) .. "\"" end
     if not (LibSerialize and LibDeflate) then return nil, "the libraries for sharing are missing" end
-    local payload = { fmt = 1, class = classTag(), name = name, plan = plan }
+    local payload = { fmt = 1, class = class, name = name, plan = plan }
     local packed = LibDeflate:CompressDeflate(LibSerialize:Serialize(payload), { level = 9 })
     return PREFIX .. LibDeflate:EncodeForPrint(packed)
+end
+
+-- every plan of every class in one string (fmt 2: { plans = { { class, name, plan }, ... } })
+function BP.exportAll()
+    if not (LibSerialize and LibDeflate) then return nil, "the libraries for sharing are missing" end
+    local list = {}
+    for _, x in ipairs(BP.allPlans()) do
+        list[#list + 1] = { class = x[1], name = x[2], plan = BP.plan(x[2], x[1]) }
+    end
+    if #list == 0 then return nil, "there are no plans yet" end
+    local packed = LibDeflate:CompressDeflate(LibSerialize:Serialize({ fmt = 2, plans = list }), { level = 9 })
+    return PREFIX .. LibDeflate:EncodeForPrint(packed), #list
 end
 
 -- plain data only: strings, numbers, booleans and tables of them, not too deep or too big
@@ -858,7 +889,7 @@ local function clean(v, depth)
     if t == "string" then return #v <= 20000 and v or nil end
     if t == "number" then return (v == v and v ~= math.huge and v ~= -math.huge) and v or nil end
     if t == "boolean" then return v end
-    if t ~= "table" or depth > 6 then return nil end
+    if t ~= "table" or depth > 8 then return nil end
     local out, n = {}, 0
     for k, x in pairs(v) do
         n = n + 1
@@ -882,22 +913,12 @@ local function safeMacro(body)
     return true
 end
 
--- the plan in a string, checked: returns { class, name, plan, dropped = { macro names } } or nil and why
-function BP.decode(str)
-    if not (LibSerialize and LibDeflate) then return nil, "the libraries for sharing are missing" end
-    str = tostring(str or ""):gsub("%s+", "")
-    if str:sub(1, #PREFIX) ~= PREFIX then return nil, "this isn't a BarPlan plan (it should start with " .. PREFIX .. ")" end
-    local packed = LibDeflate:DecodeForPrint(str:sub(#PREFIX + 1))
-    local ser = packed and LibDeflate:DecompressDeflate(packed)
-    if not ser then return nil, "the text is damaged or incomplete - copy it again, all of it" end
-    local ok, p = LibSerialize:Deserialize(ser)
-    if not ok or type(p) ~= "table" or p.fmt ~= 1 then return nil, "the text couldn't be read" end
-    p = clean(p, 0)
+-- one plan out of a string, checked: { class, name, plan, dropped = { macro names } } or nil
+local function checkPlan(p)
+    if type(p) ~= "table" then return nil end
     local plan = p.plan
-    if type(plan) ~= "table" or type(plan.slots) ~= "table" or type(p.class) ~= "string" then
-        return nil, "there is no plan in this text"
-    end
-    local slots, dropped = {}, {}
+    if type(plan) ~= "table" or type(plan.slots) ~= "table" or type(p.class) ~= "string" then return nil end
+    local slots, dropped, unsafe = {}, {}, {}
     for slot, e in pairs(plan.slots) do
         slot = tonumber(slot)
         if slot and slot >= 1 and slot <= MAX_SLOT and type(e) == "table" then
@@ -911,6 +932,8 @@ function BP.decode(str)
                                     char = e.char and true or nil }
                 else
                     dropped[#dropped + 1] = e.name
+                    unsafe[slot] = { k = "macro", name = e.name:sub(1, 16), icon = e.icon, body = e.body:sub(1, 255),
+                                     char = e.char and true or nil }
                 end
             end
         end
@@ -927,13 +950,51 @@ function BP.decode(str)
     end
     if type(plan.chat) ~= "table" then plan.chat = nil end
     table.sort(dropped)
-    return { class = p.class:upper(), name = type(p.name) == "string" and p.name or p.class, plan = plan, dropped = dropped }
+    return { class = p.class:upper(), name = type(p.name) == "string" and p.name or p.class, plan = plan, dropped = dropped,
+             unsafe = unsafe }
 end
 
--- add a decoded plan under <name> to its class's plans (replacing one of that name)
-function BP.importPlan(d, name)
+-- the plans in a string, checked: a list of { class, name, plan, dropped }, or nil and why
+function BP.decode(str)
+    if not (LibSerialize and LibDeflate) then return nil, "the libraries for sharing are missing" end
+    str = tostring(str or ""):gsub("%s+", "")
+    if str:sub(1, #PREFIX) ~= PREFIX then return nil, "this isn't a BarPlan plan (it should start with " .. PREFIX .. ")" end
+    local packed = LibDeflate:DecodeForPrint(str:sub(#PREFIX + 1))
+    local ser = packed and LibDeflate:DecompressDeflate(packed)
+    if not ser then return nil, "the text is damaged or incomplete - copy it again, all of it" end
+    local ok, p = LibSerialize:Deserialize(ser)
+    if not ok or type(p) ~= "table" or (p.fmt ~= 1 and p.fmt ~= 2) then return nil, "the text couldn't be read" end
+    p = clean(p, 0)
+    local list = {}
+    if p.fmt == 1 then
+        list[1] = checkPlan(p)
+    elseif type(p.plans) == "table" then
+        for _, x in ipairs(p.plans) do list[#list + 1] = checkPlan(x) end
+    end
+    if #list == 0 then return nil, "there is no plan in this text" end
+    return list
+end
+
+-- a name no plan of <class> has yet: <name>, else "<name> (2)", "<name> (3)" ...
+function BP.freeName(class, name, taken)
+    local b = bucket(class)
+    local function used(n) return b.plans[n] ~= nil or (taken and taken[n]) end
+    if not used(name) then return name end
+    local base = name:gsub("%s*%(%d+%)$", "")
+    for i = 2, 999 do
+        local n = base .. " (" .. i .. ")"
+        if not used(n) then return n end
+    end
+    return name
+end
+
+-- add a decoded plan under <name> to its class's plans (a plan of that name is replaced)
+function BP.importPlan(d, name, allowCode)
+    if allowCode and d.unsafe then
+        for slot, e in pairs(d.unsafe) do d.plan.slots[slot] = e end
+    end
     name = (name or ""):gsub("^%s+", ""):gsub("%s+$", "")
-    if name == "" then name = d.name end
+    if name == "" then name = BP.freeName(d.class, d.name) end
     local b = bucket(d.class)
     local was = b.plans[name] ~= nil
     d.plan.from = d.plan.from or "imported"
@@ -942,7 +1003,7 @@ function BP.importPlan(d, name)
     if not b.default or not b.plans[b.default] then b.default = name end
     local cls = (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[d.class]) or d.class
     say(string.format("%s %s plan \"%s\" (%d buttons)%s.", was and "replaced" or "added", cls, name, count(d.plan.slots),
-        #d.dropped > 0 and ("; left out macros that run code: " .. table.concat(d.dropped, ", ")) or ""))
+        #d.dropped > 0 and ((allowCode and "; with macros that run code: " or "; left out macros that run code: ") .. table.concat(d.dropped, ", ")) or ""))
     if BP.refreshUI then BP.refreshUI() end
     return name
 end
@@ -1112,9 +1173,10 @@ local function dropdown(parent, width, onPick)
     panelBg(dd.list, 0.99)
     dd.list:Hide()
     dd.rows = {}
-    function dd:SetItems(items, selected)
-        self.items, self.value = items, selected
-        self.text:SetText(selected or (#items == 0 and "no plans yet" or "choose a plan"))
+    function dd:SetItems(items, selected, label)
+        label = label or function(x) return x end
+        self.items, self.value, self.label = items, selected, label
+        self.text:SetText(selected and label(selected) or (#items == 0 and "no plans yet" or "choose a plan"))
         self.text:SetTextColor(1, 1, 1, selected and 0.9 or 0.35)
         local ar, ag, ab = accent()
         for i, it in ipairs(items) do
@@ -1134,13 +1196,13 @@ local function dropdown(parent, width, onPick)
                 r:SetScript("OnClick", function(row)
                     dd.list:Hide()
                     dd.value = row.item
-                    dd.text:SetText(row.item)
+                    dd.text:SetText((dd.label or tostring)(row.item))
                     if onPick then onPick(row.item) end
                 end)
                 self.rows[i] = r
             end
             r.item = it
-            r.text:SetText(it)
+            r.text:SetText(label(it))
             if it == selected then r.text:SetTextColor(ar, ag, ab, 1) else r.text:SetTextColor(1, 1, 1, 0.8) end
             r:Show()
         end
@@ -1277,17 +1339,23 @@ local function build()
 
     -- your class's plans
     win.plansHead, win.plansDesc = rowText(win, "Plans")
-    win.dd = dropdown(win, 220, function(name) win.sel = name; win.applyArmed, win.delArmed = nil, nil; BP.refreshUI() end)
+    win.dd = dropdown(win, 220, function(key)
+        win.selClass, win.sel = key:match("^([^\t]+)\t(.*)$")
+        win.applyArmed, win.delArmed = nil, nil
+        BP.refreshUI()
+    end)
     win.apply = flat(win, "Apply", 84)
     win.apply:SetScript("OnClick", function()
-        if not win.sel then return end
+        if not win.sel or win.selClass ~= classTag() then return end
         -- (a second click: it clears what the plan doesn't have)
         if not win.applyArmed then win.applyArmed = true; BP.refreshUI() return end
         win.applyArmed = nil
         BP.apply(win.sel)
     end)
     win.export = flat(win, "Export", 84)
-    win.export:SetScript("OnClick", function() if win.sel then BP.showExport(win.sel) end end)
+    win.export:SetScript("OnClick", function() if win.sel then BP.showExport(win.sel, win.selClass) end end)
+    win.exportAll = flat(win, "Export all", 84)
+    win.exportAll:SetScript("OnClick", function() BP.showExportAll() end)
     win.import = flat(win, "Import", 84)
     win.import:SetScript("OnClick", function() BP.showImport() end)
     win.del = flat(win, "Delete", 84)
@@ -1295,8 +1363,8 @@ local function build()
         if not win.sel then return end
         if not win.delArmed then win.delArmed = true; BP.refreshUI() return end
         win.delArmed = nil
-        local n = win.sel
-        if BP.delete(n) then say("deleted \"" .. n .. "\"") end
+        local n, c = win.sel, win.selClass
+        if BP.delete(n, c) then say("deleted " .. classLabel(c) .. " plan \"" .. n .. "\"") end
         win.sel = nil
         BP.refreshUI()
     end)
@@ -1306,8 +1374,8 @@ local function build()
     win.offerHead, win.offerDesc = rowText(win, "", true)
     win.offerDesc:SetText("New characters of your class are asked at their first login.")
     win.offer = switch(win, { "Yes", "No" }, function(on)
-        local b = bucket()
         if not win.sel then return end
+        local b = bucket(win.selClass)
         if on then b.default = win.sel elseif b.default == win.sel then b.default = nil end
         BP.refreshUI()
     end)
@@ -1343,7 +1411,7 @@ local function build()
         -- (a plan of that name already: a second click replaces it)
         if BP.plan(n) and not win.saveArmed then win.saveArmed = true; BP.refreshUI() return end
         win.saveArmed = nil
-        win.sel = BP.record(n)
+        win.sel, win.selClass = BP.record(n), classTag()
         BP.refreshUI()
     end)
     win.saveNote = text(win, 11, 1, 1, 1, 0.45)
@@ -1391,7 +1459,8 @@ local function layout()
     win.apply:ClearAllPoints(); win.apply:SetPoint("RIGHT", win.del, "LEFT", -6, 0)
     y = y + 22 + 6
     atRight(win.import, win, y)
-    win.export:ClearAllPoints(); win.export:SetPoint("RIGHT", win.import, "LEFT", -6, 0)
+    win.exportAll:ClearAllPoints(); win.exportAll:SetPoint("RIGHT", win.import, "LEFT", -6, 0)
+    win.export:ClearAllPoints(); win.export:SetPoint("RIGHT", win.exportAll, "LEFT", -6, 0)
     y = y + 22 + 6
     at(win.info, win, PAD, y); y = y + strH(win.info, 11) + 2
     row(win.offerHead, win.offerDesc, win.offer)
@@ -1424,10 +1493,18 @@ function BP.refreshUI()
     if not (win and win:IsShown()) then return end
     local cls = className()
     win.title:SetText(cls .. " bars")
+    local own = classTag()
     local names = BP.planNames()
     local have = {}
     for _, n in ipairs(names) do have[n] = true end
-    if not (win.sel and have[win.sel]) then win.sel = (C.plan and have[C.plan] and C.plan) or BP.defaultName() or names[1] end
+    local all, keys = BP.allPlans(), {}
+    for _, x in ipairs(all) do keys[#keys + 1] = x[1] .. "\t" .. x[2] end
+    if not (win.sel and win.selClass and BP.plan(win.sel, win.selClass)) then
+        win.sel = (C.plan and have[C.plan] and C.plan) or BP.defaultName() or names[1]
+        win.selClass = win.sel and own or nil
+        if not win.sel and all[1] then win.selClass, win.sel = all[1][1], all[1][2] end
+    end
+    local mine = win.sel ~= nil and win.selClass == own
     -- this character
     local follows = C.plan and have[C.plan]
     if follows then
@@ -1439,21 +1516,32 @@ function BP.refreshUI()
     win.fill:Set(not C.off)
     win.fill:SetUsable(follows == true)
     -- plans
-    win.plansDesc:SetText(#names > 0 and ("Your " .. cls .. " plans. Apply sets this character's bars up from the one chosen.")
-        or ("No " .. cls .. " plan yet: save your bars below on a character whose bars are done."))
-    win.dd:SetItems(names, win.sel)
+    win.plansDesc:SetText((#names > 0 and ("Your plans, " .. cls .. " first. Apply sets this character's bars up from a " .. cls .. " plan; any plan can be exported.")
+        or ("No " .. cls .. " plan yet: save your bars below on a character whose bars are done."
+            .. (#all > 0 and " Other classes' plans can be exported from the list." or ""))))
+    win.dd:SetItems(keys, win.sel and (win.selClass .. "\t" .. win.sel),
+        function(k)
+            local c, n = k:match("^([^\t]+)\t(.*)$")
+            local col = RAID_CLASS_COLORS and RAID_CLASS_COLORS[c]
+            local tag = col and col.colorStr and ("|c" .. col.colorStr .. classLabel(c) .. "|r") or classLabel(c)
+            return n .. "  |cff888888·|r  " .. tag
+        end)
     local also = alsoText()
     win.info:SetText(win.applyArmed and ("Click Apply again: your bars become the plan's" .. (also and ", buttons it has empty are cleared, and " .. also .. "." or " and buttons it has empty are cleared."))
-        or (win.delArmed and "Click Delete again to delete it." or (win.sel and BP.planInfo(win.sel) or "")))
-    win.apply:SetUsable(win.sel ~= nil and not InCombatLockdown())
+        or (win.delArmed and "Click Delete again to delete it." or (win.sel and (BP.planInfo(win.sel, win.selClass)
+            .. (mine and "" or ("  ·  a " .. classLabel(win.selClass) .. " plan: only a " .. classLabel(win.selClass) .. " can apply it"))) or "")))
+    win.apply:SetUsable(mine and not InCombatLockdown())
     win.apply:SetLabel(win.applyArmed and "Sure?" or "Apply")
     win.apply:SetActive(win.applyArmed)
     win.del:SetUsable(win.sel ~= nil)
     win.export:SetUsable(win.sel ~= nil)
+    win.exportAll:SetUsable(#all > 0)
     win.del:SetLabel(win.delArmed and "Sure?" or "Delete")
     win.del:SetActive(win.delArmed)
-    win.offerHead:SetText("Offer it to new " .. cls .. "s")
-    win.offer:Set(win.sel ~= nil and BP.defaultName() == win.sel)
+    local sc = win.selClass or own
+    local sb = bucket(sc)
+    win.offerHead:SetText("Offer it to new " .. classLabel(sc) .. "s")
+    win.offer:Set(win.sel ~= nil and sb.default == win.sel)
     win.offer:SetUsable(win.sel ~= nil)
     -- save
     if (win.name:GetText() or "") == "" and not win.name:HasFocus() then win.name:SetText(C.plan or cls) end
@@ -1542,10 +1630,26 @@ local function shareWindow()
     share.box:SetWidth(W - PAD * 2 - 30)
     share.box:SetScript("OnEscapePressed", function() share:Hide() end)
     share.scroll:SetScrollChild(share.box)
+    -- (an empty multi-line box is only one line tall: a click anywhere on the text area puts the cursor in it)
+    share.box:SetHeight(150)
+    share.catch = CreateFrame("Button", nil, share)
+    share.catch:SetPoint("TOPLEFT", share.scroll, "TOPLEFT", -6, 6)
+    share.catch:SetPoint("BOTTOMRIGHT", share.scroll, "BOTTOMRIGHT", 0, -6)
+    share.catch:SetFrameLevel(share.scroll:GetFrameLevel())
+    share.catch:SetScript("OnClick", function() share.box:SetFocus(); share.box:SetCursorPosition(#(share.box:GetText() or "")) end)
+    share.scroll:SetFrameLevel(share.catch:GetFrameLevel() + 1)
+    share.scroll:EnableMouse(true)
+    share.scroll:SetScript("OnMouseDown", function() share.box:SetFocus() end)
     share.boxBg = share:CreateTexture(nil, "BACKGROUND", nil, 1)
     share.boxBg:SetColorTexture(0, 0, 0, 0.35)
     share.boxBg:SetPoint("TOPLEFT", share.scroll, "TOPLEFT", -6, 6)
     share.boxBg:SetPoint("BOTTOMRIGHT", share.scroll, "BOTTOMRIGHT", 26, -6)
+    share.code = CreateFrame("CheckButton", nil, share, "UICheckButtonTemplate")
+    share.code:SetSize(24, 24)
+    share.codeLabel = text(share, 12, 1, 1, 1, 0.8)
+    share.codeLabel:SetText("Also import macros that run code (/run, /script, /console, /click ...)")
+    share.codeLabel:SetWidth(W - PAD * 2 - 30)
+    share.codeLabel:SetWordWrap(true)
     share.nameLabel = text(share, 12, 1, 1, 1, 0.7)
     share.nameLabel:SetText("Save as")
     share.name = editBox(share, 200)
@@ -1560,7 +1664,8 @@ local function shareWindow()
     return share
 end
 
-local function layoutShare(withName)
+local function layoutShare(withName, withGo)
+    if withGo == nil then withGo = withName end
     local y = 16
     at(share.eyebrow, share, PAD, y); y = y + strH(share.eyebrow, 12) + 4
     at(share.title, share, PAD, y); y = y + strH(share.title, 19) + 6
@@ -1575,7 +1680,15 @@ local function layoutShare(withName)
         share.nameLabel:Hide(); share.name:Hide()
     end
     if (share.note:GetText() or "") ~= "" then at(share.note, share, PAD, y); y = y + strH(share.note, 11) + 10; share.note:Show() else share.note:Hide() end
-    if withName then
+    if share.showCode then
+        at(share.code, share, PAD - 4, y - 2)
+        share.codeLabel:ClearAllPoints(); share.codeLabel:SetPoint("LEFT", share.code, "RIGHT", 2, 0)
+        share.code:Show(); share.codeLabel:Show()
+        y = y + 26 + 8
+    else
+        share.code:Hide(); share.codeLabel:Hide()
+    end
+    if withGo then
         at(share.go, share, PAD, y); share.go:Show()
         share.close:ClearAllPoints(); share.close:SetPoint("LEFT", share.go, "RIGHT", 6, 0)
     else
@@ -1585,12 +1698,30 @@ local function layoutShare(withName)
     share:SetHeight(y)
 end
 
-function BP.showExport(name)
-    local str, why = BP.export(name)
+function BP.showExport(name, class)
+    class = class or classTag()
+    local str, why = BP.export(name, class)
     if not str then say(why) return end
     shareWindow()
-    share.title:SetText("Share \"" .. name .. "\"")
-    share.desc:SetText("Copy this text (Ctrl+C) and keep it or send it on. BarPlan's Import adds it as a plan of your class, on any account. It holds the bars, macros, addon list, chat tabs, keybindings and Edit Mode layout.")
+    share.showCode = false
+    share.title:SetText("Share " .. classLabel(class) .. " plan \"" .. name .. "\"")
+    share.desc:SetText("Copy this text (Ctrl+C) and keep it or send it on. BarPlan's Import adds it to the plans of its class, on any character or account. It holds the bars, macros, addon list, chat tabs, keybindings and Edit Mode layout.")
+    share.note:SetText(#str .. " characters")
+    share.box:SetText(str)
+    share.box:SetScript("OnTextChanged", function(self, user) if user then self:SetText(str); self:HighlightText() end end)
+    layoutShare(false)
+    share:Show()
+    share.box:SetFocus()
+    share.box:HighlightText()
+end
+
+function BP.showExportAll()
+    local str, n = BP.exportAll()
+    if not str then say(n) return end
+    shareWindow()
+    share.showCode = false
+    share.title:SetText("Share all your plans")
+    share.desc:SetText("All " .. n .. " plans, every class, in one text. Copy it (Ctrl+C) and keep it; BarPlan's Import adds them all back, on any character or account.")
     share.note:SetText(#str .. " characters")
     share.box:SetText(str)
     share.box:SetScript("OnTextChanged", function(self, user) if user then self:SetText(str); self:HighlightText() end end)
@@ -1602,33 +1733,70 @@ end
 
 function BP.showImport()
     shareWindow()
-    share.title:SetText("Import a plan")
-    share.desc:SetText("Paste a BarPlan text (Ctrl+V), check the name, then Import. The plan joins the plans of its class, and a plan of the same name is replaced.")
+    share.title:SetText("Import plans")
+    share.desc:SetText("Paste a BarPlan text (Ctrl+V), then Import. Each plan joins the plans of its class. A name you already have gets a number, e.g. Paladin (2), so nothing is replaced unless you type an existing name for a single plan.")
     share.box:SetText("")
     share.name:SetText("")
     share.note:SetText("")
-    local decoded
-    share.box:SetScript("OnTextChanged", function(self)
-        local d, why = BP.decode(self:GetText())
-        decoded = d
-        if d then
-            if (share.name:GetText() or "") == "" then share.name:SetText(d.name) end
-            local cls = (LOCALIZED_CLASS_NAMES_MALE and LOCALIZED_CLASS_NAMES_MALE[d.class]) or d.class
-            share.note:SetText(string.format("%s plan, %d buttons%s.", cls, count(d.plan.slots),
-                #d.dropped > 0 and (" - macros that run code are left out: " .. table.concat(d.dropped, ", ")) or ""))
-        else
-            share.note:SetText((self:GetText() or "") ~= "" and ("Can't use this: " .. why .. ".") or "")
+    local decoded, names
+    share.showCode = false
+    share.code:SetChecked(false)
+    -- what the Import button will do, under the text box
+    local function describe()
+        local list = decoded
+        if not list then return end
+        local single = #list == 1
+        local lines, dropped = {}, {}
+        for i, d in ipairs(list) do
+            local n = single and ((share.name:GetText() or ""):gsub("^%s+", ""):gsub("%s+$", "")) or names[i]
+            if n == "" then n = names[i] end
+            local note = ""
+            if n ~= d.name and not single then note = ", as \"" .. n .. "\" (the name is taken)"
+            elseif bucket(d.class).plans[n] then note = ", replaces your plan of that name" end
+            lines[#lines + 1] = string.format("%s \"%s\" (%d buttons%s)", classLabel(d.class), single and n or d.name, count(d.plan.slots), note)
+            for _, m in ipairs(d.dropped) do dropped[#dropped + 1] = m end
         end
-        share.go:SetUsable(d ~= nil)
-        layoutShare(true)
+        share.note:SetText((single and "" or (#list .. " plans: ")) .. table.concat(lines, "; ")
+            .. (#dropped > 0 and ((share.code:GetChecked() and ". |cffff9933Macros that run code are imported too|r: "
+                or ". Macros that run code are left out: ") .. table.concat(dropped, ", ")) or "") .. ".")
+        share.showCode = #dropped > 0
+    end
+    share.code:SetScript("OnClick", function() describe(); if decoded then layoutShare(#decoded == 1, true) end end)
+    share.name:SetScript("OnTextChanged", function() describe(); if decoded then layoutShare(#decoded == 1, true) end end)
+    share.box:SetScript("OnTextChanged", function(self)
+        local list, why = BP.decode(self:GetText())
+        decoded, names = list, {}
+        if list then
+            -- names that are free: a plan you already have keeps its name, the import gets "(2)"
+            local taken = {}
+            for i, d in ipairs(list) do
+                taken[d.class] = taken[d.class] or {}
+                names[i] = BP.freeName(d.class, d.name, taken[d.class])
+                taken[d.class][names[i]] = true
+            end
+            if #list == 1 then share.name:SetText(names[1]) end
+            describe()
+            share.go:SetLabel(#list == 1 and "Import" or ("Import all " .. #list))
+        else
+            share.showCode = false
+            share.note:SetText((self:GetText() or "") ~= "" and ("Can't use this: " .. why .. ".") or "")
+            share.go:SetLabel("Import")
+        end
+        share.go:SetUsable(list ~= nil)
+        layoutShare(list ~= nil and #list == 1, true)
     end)
     share.go:SetScript("OnClick", function()
         if not decoded then return end
-        BP.importPlan(decoded, share.name:GetText())
+        local allow = share.code:IsShown() and share.code:GetChecked()
+        if #decoded == 1 then
+            BP.importPlan(decoded[1], share.name:GetText(), allow)
+        else
+            for i, d in ipairs(decoded) do BP.importPlan(d, names[i], allow) end
+        end
         share:Hide()
     end)
     share.go:SetUsable(false)
-    layoutShare(true)
+    layoutShare(false, true)
     share:Show()
     share.box:SetFocus()
 end
@@ -1797,7 +1965,13 @@ SlashCmdList.BARPLAN = function(msg)
         if BP.refreshUI then BP.refreshUI() end
     elseif cmd == "export" then
         local n = arg ~= "" and arg or (C.plan and BP.plan(C.plan) and C.plan) or BP.defaultName()
-        if n then BP.showExport(n) else say("no plan to export - /barplan list") end
+        local c = classTag()
+        if n and not BP.plan(n) then
+            -- (a plan of another class, by its name)
+            for _, x in ipairs(BP.allPlans()) do if x[2]:lower() == n:lower() then c, n = x[1], x[2] break end end
+        end
+        if n then BP.showExport(n, c) else say("no plan to export - /barplan list") end
+    elseif cmd == "exportall" then BP.showExportAll()
     elseif cmd == "import" then BP.showImport()
     elseif cmd == "status" then BP.status()
     elseif cmd == "minimap" then BP.setMinimap(DB.minimap.hide and true or false); say(DB.minimap.hide and "minimap button hidden" or "minimap button shown")
@@ -1806,7 +1980,7 @@ SlashCmdList.BARPLAN = function(msg)
         say("/barplan save [name] - save this character's bars as a plan of its class (default name: your class)")
         say("/barplan apply [name] - set this character's bars up from a plan of its class")
         say("/barplan addons on|off, chat on|off, keys on|off, editmode on|off - what Apply also sets up")
-        say("/barplan export [name] / import - share a plan as text, add one from text")
+        say("/barplan export [name] / exportall / import - share plans as text, add them from text")
         say("/barplan status / list / use <name> / delete <name> / off / on / minimap")
     end
 end

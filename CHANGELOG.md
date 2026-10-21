@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.11.0 (2026-10-21)
+
+### New
+- The plan list in the window shows the plans of every class (yours first, each with its class), so you can
+  export, delete or choose the plan offered to new characters of any class from any character. Apply stays for
+  plans of your own class. `/barplan export <name>` finds a plan of another class by its name too.
+- Export all (in the window, or `/barplan exportall`): every plan of every class in one text. Import adds them
+  all back.
+- Import no longer replaces a plan by default: a name you already have gets a number ("Paladin (2)"). The window
+  says for each plan what will happen; for a single plan you can still type an existing name to replace it.
+- Macros that run code are still left out of an imported plan by default; a checkbox in the import window (shown
+  when the text has such macros, off each time) imports them too, at your own discretion.
+
 ## v1.10.1 (2026-10-21)
 
 ### Fixed
