@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.11.1 (2026-10-21)
+
+### Fixed
+- A button BarPlan couldn't read when a plan was saved was left out of the plan, so Apply cleared it and put
+  nothing back. Such a button is now kept in the plan as "keep as it is", and Apply leaves it alone.
+
+### New
+- `/barplan debug [from-to]` (default 1-12) lists what BarPlan sees on those buttons and what the plan has there,
+  for bug reports.
+
 ## v1.11.0 (2026-10-21)
 
 ### New

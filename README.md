@@ -92,6 +92,7 @@ rank.
 | `/barplan keys on` / `off` | whether Apply also sets up your keybindings |
 | `/barplan editmode on` / `off` | whether Apply also sets up your Edit Mode layout |
 | `/barplan export [name]` / `exportall` / `import` | share a plan (or all) as text / add from text |
+| `/barplan debug [from-to]` | what BarPlan sees on those buttons (default 1-12), for bug reports |
 | `/barplan minimap` | hide / show the minimap button (also a checkbox in the window) |
 
 `/bplan` works too.

@@ -668,6 +668,8 @@ function BP.record(name)
             slots[slot] = cur
             n = n + 1
         elseif cur then
+            -- (a button it can't read: kept as it is when the plan is applied, not cleared)
+            slots[slot] = { k = "keep", kind = cur.kind }
             skipped = skipped + 1
         end
     end
@@ -690,7 +692,7 @@ function BP.record(name)
             .. (em and (", Edit Mode layout " .. (em.name or "(built-in)")) or ""),
         (pinned > 0 and (", " .. pinned .. " spells kept at a lower rank") or "")
             .. (spellMacros > 0 and (", " .. spellMacros .. " single-spell macros kept as their spell") or ""),
-        skipped > 0 and (" (" .. skipped .. " buttons of a kind it can't place left out)") or "",
+        skipped > 0 and (" (" .. skipped .. " buttons of a kind it can't read are kept as they are - /barplan debug shows them)") or "",
         b.default == name and (" New " .. className() .. "s get it.") or ""))
     if BP.refreshUI then BP.refreshUI() end
     return name
@@ -712,7 +714,9 @@ function BP.apply(name)
     for slot = 1, MAX_SLOT do
         local e = plan.slots[slot]
         local cur = readSlot(slot)
-        if e then
+        if e and e.k == "keep" then
+            if cur then C.placed[slot] = true end
+        elseif e then
             if holds(cur, e, book) then
                 C.placed[slot] = e.name or e.id
             else
@@ -926,6 +930,8 @@ local function checkPlan(p)
                 slots[slot] = { k = "spell", name = e.name, rank = tonumber(e.rank) or 0, pin = tonumber(e.pin) }
             elseif e.k == "item" and tonumber(e.id) then
                 slots[slot] = { k = "item", id = tonumber(e.id), name = type(e.name) == "string" and e.name or nil }
+            elseif e.k == "keep" then
+                slots[slot] = { k = "keep" }
             elseif e.k == "macro" and type(e.name) == "string" then
                 if safeMacro(e.body) then
                     slots[slot] = { k = "macro", name = e.name:sub(1, 16), icon = e.icon, body = e.body:sub(1, 255),
@@ -1006,6 +1012,31 @@ function BP.importPlan(d, name, allowCode)
         #d.dropped > 0 and ((allowCode and "; with macros that run code: " or "; left out macros that run code: ") .. table.concat(d.dropped, ", ")) or ""))
     if BP.refreshUI then BP.refreshUI() end
     return name
+end
+
+-- what BarPlan sees on buttons <from>..<to> and what the plan has there (for bug reports)
+function BP.debug(from, to)
+    from, to = tonumber(from) or 1, tonumber(to) or tonumber(from) and tonumber(from) + 11 or 12
+    local plan = C.plan and BP.plan(C.plan)
+    local book = scanBook()
+    say(string.format("buttons %d-%d, plan %s, %s", from, to, tostring(C.plan), (GetBuildInfo and select(1, GetBuildInfo())) or "?"))
+    for slot = from, math.min(to, MAX_SLOT) do
+        local ok, has = pcall(HasAction, slot)
+        local kind, id, sub = GetActionInfo(slot)
+        local cur = readSlot(slot)
+        local e = plan and plan.slots[slot]
+        local nameOk = ""
+        if kind == "spell" and id then
+            local n = spellInfo(id)
+            nameOk = " spell=" .. tostring(n) .. (n and book[n] and "" or " (not in spellbook scan)")
+        elseif kind == "macro" then
+            nameOk = " text=" .. tostring(GetActionText and GetActionText(slot))
+        end
+        local h = (cur and e and e.k ~= "keep") and (holds(cur, e, book) and "same" or "differs") or "-"
+        say(string.format("%d: has=%s raw=%s,%s,%s%s | sees %s | plan %s | %s", slot, tostring(ok and has),
+            tostring(kind), tostring(id), tostring(sub), nameOk, cur and (cur.k == "other" and "?" or describe(cur)) or "empty",
+            e and (e.k == "keep" and "keep" or describe(e)) or "empty", h))
+    end
 end
 
 function BP.status()
@@ -1973,6 +2004,9 @@ SlashCmdList.BARPLAN = function(msg)
         if n then BP.showExport(n, c) else say("no plan to export - /barplan list") end
     elseif cmd == "exportall" then BP.showExportAll()
     elseif cmd == "import" then BP.showImport()
+    elseif cmd == "debug" then
+        local a, b = arg:match("^(%d+)%s*%-?%s*(%d*)$")
+        BP.debug(a, b ~= "" and b or nil)
     elseif cmd == "status" then BP.status()
     elseif cmd == "minimap" then BP.setMinimap(DB.minimap.hide and true or false); say(DB.minimap.hide and "minimap button hidden" or "minimap button shown")
     else
