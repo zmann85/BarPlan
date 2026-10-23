@@ -871,7 +871,7 @@ function BP.export(name, class)
     if not plan then return nil, "there is no " .. classLabel(class) .. " plan called \"" .. tostring(name) .. "\"" end
     if not (LibSerialize and LibDeflate) then return nil, "the libraries for sharing are missing" end
     local payload = { fmt = 1, class = class, name = name, plan = plan }
-    local packed = LibDeflate:CompressDeflate(LibSerialize:Serialize(payload), { level = 9 })
+    local packed = LibDeflate:CompressDeflate(LibSerialize:Serialize(payload))
     return PREFIX .. LibDeflate:EncodeForPrint(packed)
 end
 
@@ -883,7 +883,7 @@ function BP.exportAll()
         list[#list + 1] = { class = x[1], name = x[2], plan = BP.plan(x[2], x[1]) }
     end
     if #list == 0 then return nil, "there are no plans yet" end
-    local packed = LibDeflate:CompressDeflate(LibSerialize:Serialize({ fmt = 2, plans = list }), { level = 9 })
+    local packed = LibDeflate:CompressDeflate(LibSerialize:Serialize({ fmt = 2, plans = list }))
     return PREFIX .. LibDeflate:EncodeForPrint(packed), #list
 end
 
@@ -1738,8 +1738,8 @@ function BP.showExport(name, class)
     share.title:SetText("Share " .. classLabel(class) .. " plan \"" .. name .. "\"")
     share.desc:SetText("Copy this text (Ctrl+C) and keep it or send it on. BarPlan's Import adds it to the plans of its class, on any character or account. It holds the bars, macros, addon list, chat tabs, keybindings and Edit Mode layout.")
     share.note:SetText(#str .. " characters")
-    share.box:SetText(str)
     share.box:SetScript("OnTextChanged", function(self, user) if user then self:SetText(str); self:HighlightText() end end)
+    share.box:SetText(str)
     layoutShare(false)
     share:Show()
     share.box:SetFocus()
@@ -1754,8 +1754,8 @@ function BP.showExportAll()
     share.title:SetText("Share all your plans")
     share.desc:SetText("All " .. n .. " plans, every class, in one text. Copy it (Ctrl+C) and keep it; BarPlan's Import adds them all back, on any character or account.")
     share.note:SetText(#str .. " characters")
-    share.box:SetText(str)
     share.box:SetScript("OnTextChanged", function(self, user) if user then self:SetText(str); self:HighlightText() end end)
+    share.box:SetText(str)
     layoutShare(false)
     share:Show()
     share.box:SetFocus()
@@ -1913,7 +1913,7 @@ for _, e in ipairs({ "ADDON_LOADED", "PLAYER_LOGIN", "SPELLS_CHANGED", "LEARNED_
                      "ACTIONBAR_SLOT_CHANGED" }) do
     pcall(f.RegisterEvent, f, e)
 end
-local soon = false
+local soon, uiSoon = false, false
 local function fillSoon()
     if soon then return end
     soon = true
@@ -1957,7 +1957,11 @@ f:SetScript("OnEvent", function(_, event, arg)
             if name and not InCombatLockdown() then askApply(name) end
         end)
     elseif event == "UPDATE_BINDINGS" then
-        if BP.refreshUI and DB then BP.refreshUI() end
+        -- (the game sends this once per changed key - Apply can change hundreds: the window redraws once, a frame later)
+        if BP.refreshUI and DB and not uiSoon then
+            uiSoon = true
+            C_Timer.After(0, function() uiSoon = false; BP.refreshUI() end)
+        end
     elseif event == "PLAYER_REGEN_ENABLED" or event == "PLAYER_REGEN_DISABLED" then
         if event == "PLAYER_REGEN_ENABLED" and pending then fillSoon() end
         if BP.refreshUI then BP.refreshUI() end

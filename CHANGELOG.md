@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Apply from the window could freeze the game for a moment when it changed many keybindings: the window redrew
+  itself once for every key. It now redraws once.
+- Export and Export all took noticeably long with several plans. They use a faster compression setting now (the text
+  is a little longer; Import reads both).
+- After the Import window had been open, Export showed Import's summary and its "macros that run code" checkbox under
+  the text. It shows the character count again.
+
 ## v1.11.1 (2026-10-21)
 
 ### Fixed
