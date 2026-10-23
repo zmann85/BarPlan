@@ -131,7 +131,8 @@ local function plainSpell(body)
             if t and t:find("[%[;]") then return nil end
         else
             local name = line:match("^/cast%s+(.+)$")
-            if not name or cast or name:find("[%[;@]") then return nil end
+            -- (a "!" in front, as /cast !Stealth, keeps an aura or stance from toggling off: that needs the macro)
+            if not name or cast or name:find("[%[;@]") or name:find("^!") then return nil end
             cast = name:gsub("%s*%(%s*[Rr]ank%s*%d+%s*%)%s*$", ""):gsub("%s+$", "")
         end
     end
@@ -185,6 +186,12 @@ end
 -- put a plan entry on a button; false (and why) when it can't be there yet
 local function place(slot, e, book, made)
     ClearCursor()
+    if e.k == "spell" and type(e.name) == "string" and e.name:find("^!") then
+        -- (a plan saved before 1.11.3 turned "/cast !Stealth" into a spell "!Stealth": make it the macro again)
+        local real = e.name:sub(2)
+        local mname = (real:gsub("%s+", "")):sub(1, 12):lower()
+        e = { k = "macro", name = mname, icon = 134400, body = "#showtooltip " .. real .. "\n/cast !" .. real, char = true }
+    end
     if e.k == "spell" then
         local id = wantedID(e, book)
         if not id then return false end

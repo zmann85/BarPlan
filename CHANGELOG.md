@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.11.3 (2026-10-23)
+
+### Fixed
+- A macro like `/cast !Stealth` was saved as a spell called "!Stealth", so its button stayed empty on a new
+  character. A "!" in front (it keeps Stealth, an aura or a stance from toggling off) now keeps it a macro. A plan
+  saved before puts the macro back on that button when applied.
+
 ## v1.11.2 (2026-10-23)
 
 ### Fixed
