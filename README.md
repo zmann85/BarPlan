@@ -8,7 +8,7 @@ A WoW Forever addon.</p>
 
 ## Install
 1. Open the [latest release](https://github.com/zmann85/BarPlan/releases/latest) and download the `BarPlan-…zip` file under **Assets**.
-2. Unzip it into `World of Warcraft\_classic_beta_\Interface\AddOns\` (you should end up with an `AddOns\BarPlan` folder).
+2. Unzip it into `World of Warcraft\_forever_\Interface\AddOns\` (you should end up with an `AddOns\BarPlan` folder).
 3. Start the game or type `/reload`.
 
 To update, repeat this and replace the old folder. Your plans are kept.
