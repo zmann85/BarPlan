@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.11.2 (2026-10-23)
 
 ### Fixed
 - Apply from the window could freeze the game for a moment when it changed many keybindings: the window redrew
